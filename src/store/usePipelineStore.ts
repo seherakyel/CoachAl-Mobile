@@ -3,12 +3,13 @@ import type { AlignmentScoreResponse } from "../services/api";
 
 type PipelineState = {
   cvId: string | null;
+  cvDisplayName: string;
   profileId: string | null;
   companyName: string;
   positionTitle: string;
   alignmentId: string | null;
   alignment: AlignmentScoreResponse | null;
-  setCv: (cvId: string | null) => void;
+  setCv: (cvId: string | null, displayName?: string | null) => void;
   setCompany: (profileId: string, companyName: string, positionTitle: string) => void;
   setAlignment: (alignmentId: string, payload: AlignmentScoreResponse) => void;
   resetFlow: () => void;
@@ -23,6 +24,7 @@ type PipelineState = {
 
 const initial = {
   cvId: null as string | null,
+  cvDisplayName: "",
   profileId: null as string | null,
   companyName: "",
   positionTitle: "",
@@ -32,14 +34,19 @@ const initial = {
 
 export const usePipelineStore = create<PipelineState>((set) => ({
   ...initial,
-  setCv: (cvId) => set({ cvId }),
+  setCv: (cvId, displayName) =>
+    set({
+      cvId,
+      cvDisplayName: cvId && displayName?.trim() ? displayName.trim() : "",
+    }),
   setCompany: (profileId, companyName, positionTitle) =>
     set({ profileId, companyName, positionTitle }),
   setAlignment: (alignmentId, payload) => set({ alignmentId, alignment: payload }),
   resetFlow: () => set({ ...initial }),
   hydrateFromApplication: ({ cvId, profileId, alignmentId, companyName, positionTitle }) =>
     set({
-      cvId,
+      cvId: cvId || null,
+      cvDisplayName: "",
       profileId,
       alignmentId,
       companyName,

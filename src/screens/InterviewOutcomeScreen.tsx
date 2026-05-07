@@ -19,9 +19,9 @@ export function InterviewOutcomeScreen() {
   const openFeedback = () => {
     const parent = navigation.getParent() as { navigate: (name: string, params?: Record<string, unknown>) => void } | undefined;
     if (!parent) return;
-    parent.navigate("Analiz", {
+    parent.navigate("Reports", {
       screen: "FeedbackReport",
-      params: { sessionId: lastSessionId, alignmentId: alignmentId ?? null },
+      params: { sessionId: lastSessionId, alignmentId: alignmentId ?? undefined },
     });
   };
 

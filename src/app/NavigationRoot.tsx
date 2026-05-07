@@ -3,27 +3,33 @@ import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 import { DashboardScreen } from "../screens/DashboardScreen";
-import { CvUploadScreen } from "../screens/CvUploadScreen";
-import { CompanyTargetScreen } from "../screens/CompanyTargetScreen";
+import { CvAnalysisScreen } from "../screens/CvAnalysisScreen";
 import { AlignmentResultScreen } from "../screens/AlignmentResultScreen";
-import { FeedbackReportScreen } from "../screens/FeedbackReportScreen";
 import { InterviewHubScreen } from "../screens/InterviewHubScreen";
 import { ClassicInterviewScreen } from "../screens/ClassicInterviewScreen";
 import { QuizInterviewScreen } from "../screens/QuizInterviewScreen";
 import { InterviewOutcomeScreen } from "../screens/InterviewOutcomeScreen";
-import type { AnalyzeParamList, InterviewParamList, MainTabParamList } from "./navigationTypes";
+import { ReportsHubScreen } from "../screens/ReportsHubScreen";
+import { FeedbackReportScreen } from "../screens/FeedbackReportScreen";
+import { SettingsScreen } from "../screens/SettingsScreen";
+import type {
+  AnalyzeParamList,
+  InterviewParamList,
+  MainTabParamList,
+  ReportsParamList,
+} from "./navigationTypes";
+import { CoachColors } from "../theme/coachTheme";
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
 const AnalyzeStack = createNativeStackNavigator<AnalyzeParamList>();
 const InterviewStack = createNativeStackNavigator<InterviewParamList>();
+const ReportsStack = createNativeStackNavigator<ReportsParamList>();
 
 function AnalyzeNavigator() {
   return (
     <AnalyzeStack.Navigator>
-      <AnalyzeStack.Screen name="CvUpload" component={CvUploadScreen} options={{ title: "CV yükleme" }} />
-      <AnalyzeStack.Screen name="CompanyTarget" component={CompanyTargetScreen} options={{ title: "Hedef" }} />
-      <AnalyzeStack.Screen name="AlignmentResult" component={AlignmentResultScreen} options={{ title: "Skor" }} />
-      <AnalyzeStack.Screen name="FeedbackReport" component={FeedbackReportScreen} options={{ title: "Rapor" }} />
+      <AnalyzeStack.Screen name="CvAnalysisHome" component={CvAnalysisScreen} options={{ headerShown: false }} />
+      <AnalyzeStack.Screen name="AlignmentResult" component={AlignmentResultScreen} options={{ headerShown: false }} />
     </AnalyzeStack.Navigator>
   );
 }
@@ -31,11 +37,20 @@ function AnalyzeNavigator() {
 function InterviewNavigator() {
   return (
     <InterviewStack.Navigator>
-      <InterviewStack.Screen name="InterviewHub" component={InterviewHubScreen} options={{ title: "Merkez" }} />
-      <InterviewStack.Screen name="ClassicInterview" component={ClassicInterviewScreen} options={{ title: "Klasik" }} />
-      <InterviewStack.Screen name="QuizInterview" component={QuizInterviewScreen} options={{ title: "Quiz" }} />
+      <InterviewStack.Screen name="InterviewHub" component={InterviewHubScreen} options={{ headerShown: false }} />
+      <InterviewStack.Screen name="ClassicInterview" component={ClassicInterviewScreen} options={{ title: "Klasik sınav" }} />
+      <InterviewStack.Screen name="QuizInterview" component={QuizInterviewScreen} options={{ title: "Teknik quiz" }} />
       <InterviewStack.Screen name="InterviewOutcome" component={InterviewOutcomeScreen} options={{ title: "Sonuç" }} />
     </InterviewStack.Navigator>
+  );
+}
+
+function ReportsNavigator() {
+  return (
+    <ReportsStack.Navigator>
+      <ReportsStack.Screen name="ReportsHub" component={ReportsHubScreen} options={{ headerShown: false }} />
+      <ReportsStack.Screen name="FeedbackReport" component={FeedbackReportScreen} options={{ headerShown: false }} />
+    </ReportsStack.Navigator>
   );
 }
 
@@ -44,6 +59,12 @@ function MainTabs() {
     <Tab.Navigator
       screenOptions={{
         headerShown: false,
+        tabBarActiveTintColor: CoachColors.primary,
+        tabBarInactiveTintColor: CoachColors.slate500,
+        tabBarStyle: {
+          borderTopColor: CoachColors.slate100,
+          backgroundColor: CoachColors.surfaceContainerLowest,
+        },
       }}
     >
       <Tab.Screen
@@ -55,19 +76,35 @@ function MainTabs() {
         }}
       />
       <Tab.Screen
-        name="Analiz"
+        name="CvAnalysis"
         component={AnalyzeNavigator}
         options={{
-          title: "Analiz",
+          title: "CV Analizi",
+          tabBarIcon: ({ color, size }) => <MaterialCommunityIcons name="file-document-outline" color={color} size={size} />,
+        }}
+      />
+      <Tab.Screen
+        name="Interviews"
+        component={InterviewNavigator}
+        options={{
+          title: "Mülakatlar",
+          tabBarIcon: ({ color, size }) => <MaterialCommunityIcons name="microphone-message" color={color} size={size} />,
+        }}
+      />
+      <Tab.Screen
+        name="Reports"
+        component={ReportsNavigator}
+        options={{
+          title: "Raporlar",
           tabBarIcon: ({ color, size }) => <MaterialCommunityIcons name="chart-box-outline" color={color} size={size} />,
         }}
       />
       <Tab.Screen
-        name="Mulakat"
-        component={InterviewNavigator}
+        name="Settings"
+        component={SettingsScreen}
         options={{
-          title: "Mülakat",
-          tabBarIcon: ({ color, size }) => <MaterialCommunityIcons name="microphone-message" color={color} size={size} />,
+          title: "Ayarlar",
+          tabBarIcon: ({ color, size }) => <MaterialCommunityIcons name="cog-outline" color={color} size={size} />,
         }}
       />
     </Tab.Navigator>
@@ -78,7 +115,11 @@ const navTheme = {
   ...DefaultTheme,
   colors: {
     ...DefaultTheme.colors,
-    background: "#ffffff",
+    background: CoachColors.background,
+    primary: CoachColors.primaryContainer,
+    card: CoachColors.surfaceContainerLowest,
+    text: CoachColors.onSurface,
+    border: CoachColors.slate100,
   },
 };
 

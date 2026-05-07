@@ -171,7 +171,7 @@ export function AlignmentResultScreen() {
           mode="contained"
           icon="microphone-message"
           onPress={() => {
-            navigation.getParent()?.navigate("Mulakat", { screen: "InterviewHub" });
+            navigation.getParent()?.navigate("Interviews", { screen: "InterviewHub" });
           }}
         >
           Mülakat merkezine git
@@ -182,9 +182,9 @@ export function AlignmentResultScreen() {
           icon="file-chart"
           disabled={!effectiveAlignmentId}
           onPress={() =>
-            navigation.navigate("FeedbackReport", {
-              sessionId: null,
-              alignmentId: effectiveAlignmentId,
+            navigation.getParent()?.navigate("Reports", {
+              screen: "FeedbackReport",
+              params: { alignmentId: effectiveAlignmentId, sessionId: null },
             })
           }
         >

@@ -8,16 +8,16 @@ import { Appbar, Button, Card, List, Snackbar, Text } from "react-native-paper";
 import { generateFeedback } from "../services/api";
 import { extractDetail } from "../services/apiClient";
 import { usePipelineStore } from "../store/usePipelineStore";
-import type { AnalyzeParamList } from "../app/navigationTypes";
+import type { ReportsParamList } from "../app/navigationTypes";
 
-type Nav = NativeStackNavigationProp<AnalyzeParamList>;
-type R = RouteProp<AnalyzeParamList, "FeedbackReport">;
+type Nav = NativeStackNavigationProp<ReportsParamList>;
+type R = RouteProp<ReportsParamList, "FeedbackReport">;
 
 export function FeedbackReportScreen() {
   const navigation = useNavigation<Nav>();
   const route = useRoute<R>();
   const storeAlignmentId = usePipelineStore((s) => s.alignmentId);
-  const alignmentId = storeAlignmentId ?? route.params?.alignmentId ?? "";
+  const alignmentId = route.params?.alignmentId ?? storeAlignmentId ?? "";
   const sessionId = route.params?.sessionId ?? null;
   const [snack, setSnack] = useState<string | null>(null);
 
@@ -36,7 +36,7 @@ export function FeedbackReportScreen() {
     <View style={{ flex: 1 }}>
       <Appbar.Header elevated>
         <Appbar.BackAction onPress={() => navigation.goBack()} />
-        <Appbar.Content title="AI raporu" />
+        <Appbar.Content title="CV Doktoru" />
       </Appbar.Header>
       <ScrollView contentContainerStyle={{ padding: 12, paddingBottom: 96 }}>
         <Card mode="outlined">

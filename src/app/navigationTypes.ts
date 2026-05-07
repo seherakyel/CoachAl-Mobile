@@ -1,8 +1,6 @@
 export type AnalyzeParamList = {
-  CvUpload: undefined;
-  CompanyTarget: undefined;
+  CvAnalysisHome: undefined;
   AlignmentResult: { resultId?: string } | undefined;
-  FeedbackReport: { sessionId?: string | null; alignmentId?: string | null } | undefined;
 };
 
 export type InterviewParamList = {
@@ -12,10 +10,32 @@ export type InterviewParamList = {
   InterviewOutcome: undefined;
 };
 
+export type ReportsParamList = {
+  ReportsHub: undefined;
+  FeedbackReport: { alignmentId?: string; sessionId?: string | null } | undefined;
+};
+
 export type MainTabParamList = {
   Home: undefined;
-  Analiz: { screen?: keyof AnalyzeParamList; params?: AnalyzeParamList[keyof AnalyzeParamList] } | undefined;
-  Mulakat: { screen?: keyof InterviewParamList; params?: InterviewParamList[keyof InterviewParamList] } | undefined;
+  CvAnalysis:
+    | undefined
+    | {
+        screen?: keyof AnalyzeParamList;
+        params?: AnalyzeParamList[keyof AnalyzeParamList];
+      };
+  Interviews:
+    | undefined
+    | {
+        screen?: keyof InterviewParamList;
+        params?: InterviewParamList[keyof InterviewParamList];
+      };
+  Reports:
+    | undefined
+    | {
+        screen?: keyof ReportsParamList;
+        params?: ReportsParamList[keyof ReportsParamList];
+      };
+  Settings: undefined;
 };
 
 export type RootStackParamList = {

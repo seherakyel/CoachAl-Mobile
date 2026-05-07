@@ -8,6 +8,8 @@ import {
   sendPasswordResetEmail,
   signInWithEmailAndPassword,
   signOut,
+  updatePassword,
+  updateProfile,
 } from "firebase/auth";
 import { publicApi } from "./publicApi";
 
@@ -73,4 +75,18 @@ export async function sendReset(email: string): Promise<void> {
   const a = authRef;
   if (!a) throw new Error("Kimlik doğrulama hazır değil");
   await sendPasswordResetEmail(a, email.trim());
+}
+
+export async function updateUserDisplayName(displayName: string): Promise<void> {
+  const a = authRef;
+  const u = a?.currentUser;
+  if (!u) throw new Error("Oturum yok");
+  await updateProfile(u, { displayName: displayName.trim() });
+}
+
+export async function updateUserPassword(newPassword: string): Promise<void> {
+  const a = authRef;
+  const u = a?.currentUser;
+  if (!u) throw new Error("Oturum yok");
+  await updatePassword(u, newPassword);
 }
