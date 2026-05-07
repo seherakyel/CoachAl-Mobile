@@ -1,7 +1,6 @@
 import { useEffect } from "react";
-import { View, ActivityIndicator, Text } from "react-native";
+import { View, ActivityIndicator, Text, StatusBar } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import { StatusBar } from "expo-status-bar";
 import { initFirebaseFromRemote, subscribeAuth } from "./src/services/firebaseAuth";
 import { useAuthStore } from "./src/store/useAuthStore";
 import { NavigationRoot } from "./src/app/NavigationRoot";
@@ -56,7 +55,7 @@ export default function App() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <AppProviders>
-        <StatusBar style="dark" />
+        <StatusBar barStyle="dark-content" />
         <Gate />
       </AppProviders>
     </GestureHandlerRootView>

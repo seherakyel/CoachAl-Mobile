@@ -1,9 +1,6 @@
 node_modules/
 
-.expo/
 dist/
-web-build/
-expo-env.d.ts
 
 *.log
 npm-debug.*
@@ -50,21 +47,18 @@ Thumbs.db
 *.cer
 *.certSigningRequest
 
-/ios/
-/android/
-
-/ios/Pods/
+ios/Pods/
 ios/**/*.xcworkspace/xcuserdata/
 ios/**/*.xcodeproj/xcuserdata/
 ios/**/*.xcodeproj/project.xcworkspace/xcuserdata/
 *.xcuserstate
 
-/android/.gradle/
-/android/app/build/
-/android/build/
-/android/local.properties
-/android/.cxx/
-/android/*.hprof
+android/.gradle/
+android/app/build/
+android/build/
+android/local.properties
+android/.cxx/
+android/*.hprof
 *.apk
 *.aab
 *.ap_
@@ -73,7 +67,7 @@ ios/**/*.xcodeproj/project.xcworkspace/xcuserdata/
 buck-out/
 \.buckd/
 *.keystore
-!debug.keystore
+!android/app/debug.keystore
 
 *.orig
 *.rej
@@ -90,3 +84,6 @@ temp/
 *.jsbundle
 
 credentials.json
+
+google-services.json
+GoogleService-Info.plist

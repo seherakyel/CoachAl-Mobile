@@ -1,7 +1,7 @@
 import { NavigationContainer, DefaultTheme } from "@react-navigation/native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
+import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 import { DashboardScreen } from "../screens/DashboardScreen";
 import { CvUploadScreen } from "../screens/CvUploadScreen";
 import { CompanyTargetScreen } from "../screens/CompanyTargetScreen";
