@@ -3,7 +3,13 @@ import { View, ScrollView } from "react-native";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import DocumentPicker, { types } from "react-native-document-picker";
+import {
+  errorCodes,
+  isErrorWithCode,
+  keepLocalCopy,
+  pick,
+  types,
+} from "@react-native-documents/picker";
 import { Appbar, Button, Card, Snackbar, Text } from "react-native-paper";
 import { uploadCvPdf } from "../services/api";
 import { extractDetail } from "../services/apiClient";
@@ -32,22 +38,28 @@ export function CvUploadScreen() {
 
   const pickAndUpload = async () => {
     try {
-      const [res] = await DocumentPicker.pick({
-        type: [types.pdf],
-        copyTo: "cachesDirectory",
+      const [res] = await pick({ type: [types.pdf] });
+      const fileName = res.name ?? "cv.pdf";
+      const [copy] = await keepLocalCopy({
+        files: [{ uri: res.uri, fileName }],
+        destination: "cachesDirectory",
       });
+      if (copy.status === "error") {
+        setSnack(copy.copyError);
+        return;
+      }
       const form = new FormData();
       form.append(
         "file",
         {
-          uri: res.uri,
-          name: res.name ?? "cv.pdf",
+          uri: copy.localUri,
+          name: fileName,
           type: "application/pdf",
         } as unknown as Blob
       );
       mutation.mutate(form);
     } catch (e) {
-      if (DocumentPicker.isCancel(e)) return;
+      if (isErrorWithCode(e) && e.code === errorCodes.OPERATION_CANCELED) return;
       setSnack(extractDetail(e));
     }
   };

@@ -1,0 +1,4 @@
+/Users/sehermac/Desktop/repolarr/CoachAl-Mobile/android/app/.cxx/Debug/6v2q3p6s/x86/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/foo.dir
+/Users/sehermac/Desktop/repolarr/CoachAl-Mobile/android/app/.cxx/Debug/6v2q3p6s/x86/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/boo.dir
+/Users/sehermac/Desktop/repolarr/CoachAl-Mobile/android/app/.cxx/Debug/6v2q3p6s/x86/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/edit_cache.dir
+/Users/sehermac/Desktop/repolarr/CoachAl-Mobile/android/app/.cxx/Debug/6v2q3p6s/x86/CMakeFiles/_CMakeLTOTest-CXX/bin/CMakeFiles/rebuild_cache.dir
