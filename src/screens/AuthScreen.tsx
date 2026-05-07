@@ -6,7 +6,7 @@ import { useForm, Controller } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { emailLogin, emailRegister, sendReset } from "../services/firebaseAuth";
-import { extractDetail } from "../services/apiClient";
+import { authErrorMessage } from "../utils/authErrorMessage";
 import { SocialLoginRow } from "../components/SocialLoginButton";
 import { CoachColors, CoachRadii, CoachShadow } from "../theme/coachTheme";
 
@@ -38,7 +38,7 @@ export function AuthScreen() {
         await emailRegister(values.email, values.password);
       }
     } catch (e) {
-      setSnack(extractDetail(e));
+      setSnack(authErrorMessage(e));
     } finally {
       setBusy(false);
     }
@@ -213,7 +213,7 @@ export function AuthScreen() {
                   await sendReset(resetEmail);
                   setSnack("Sıfırlama bağlantısı e-posta adresinize gönderildi");
                 } catch (e) {
-                  setSnack(extractDetail(e));
+                  setSnack(authErrorMessage(e));
                 } finally {
                   setResetOpen(false);
                 }
