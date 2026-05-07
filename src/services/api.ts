@@ -202,7 +202,10 @@ export async function getHealth(): Promise<HealthResponse> {
 }
 
 export async function uploadCvPdf(form: FormData): Promise<CvUploadResponse> {
-  const res = await api.post<CvUploadResponse>("/cv/upload", form);
+  const res = await api.post<CvUploadResponse>("/cv/upload", form, {
+    maxBodyLength: Infinity,
+    maxContentLength: Infinity,
+  });
   return res.data;
 }
 
