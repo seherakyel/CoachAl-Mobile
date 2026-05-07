@@ -8,6 +8,7 @@ export const api = axios.create({
 });
 
 api.interceptors.request.use(async (config) => {
+  config.baseURL = `${getApiBaseUrl()}/api`;
   const token = await getIdToken();
   const headers = AxiosHeaders.from(config.headers ?? {});
   if (token) {
@@ -31,7 +32,7 @@ export function extractDetail(error: unknown): string {
       (typeof ax.message === "string" && ax.message.toLowerCase().includes("network")))
   ) {
     const base = getApiBaseUrl();
-    return `Sunucuya ulaşılamadı (${base}). Backend’in çalıştığından emin olun; Android emülatörde adres genelde http://10.0.2.2:PORT olmalı (localhost değil).`;
+    return `Sunucuya ulaşılamadı (${base}). Backend'i şöyle dinletin: uvicorn ... --host 0.0.0.0 --port 8000. Hâlâ olmazsa: npm run adb:reverse, .env: ANDROID_USE_DEVICE_LOCALHOST=true ve API_BASE_URL=http://127.0.0.1:8000, sonra yeniden derleme.`;
   }
   const d = ax.response?.data?.detail;
   if (Array.isArray(d)) return d.map((x) => String(x)).join("\n");

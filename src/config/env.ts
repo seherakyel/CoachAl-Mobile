@@ -7,9 +7,16 @@ function devApiBase(): string {
   return Platform.OS === "android" ? "http://10.0.2.2:8000" : "http://127.0.0.1:8000";
 }
 
-/** Android emülatörde `localhost` / `127.0.0.1` makineye değil emülatöre işaret eder; host için `10.0.2.2` gerekir. */
+/**
+ * Android emülatörde `localhost` / `127.0.0.1` varsayılan olarak emülatörün kendisidir.
+ * Host makineye gitmek için genelde `10.0.2.2` kullanılır.
+ * `adb reverse tcp:PORT tcp:PORT` kullanıyorsanız `.env` içinde ANDROID_USE_DEVICE_LOCALHOST=true
+ * ve API_BASE_URL=http://127.0.0.1:PORT birakin (127.0.0.1'i 10.0.2.2'ye cevirmeyiz).
+ */
 function normalizeApiBaseForAndroid(url: string): string {
   if (Platform.OS !== "android") return url;
+  const keepLocalhost = (Config.ANDROID_USE_DEVICE_LOCALHOST ?? "").trim().toLowerCase() === "true";
+  if (keepLocalhost) return url;
   return url
     .replace(/127\.0\.0\.1/gi, "10.0.2.2")
     .replace(/localhost/gi, "10.0.2.2");
