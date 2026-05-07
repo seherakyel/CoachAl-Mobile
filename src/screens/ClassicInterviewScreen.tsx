@@ -10,6 +10,7 @@ import { extractDetail } from "../services/apiClient";
 import { usePipelineStore } from "../store/usePipelineStore";
 import { useInterviewStore } from "../store/useInterviewStore";
 import type { InterviewParamList } from "../app/navigationTypes";
+import { CoachAppBarTheme, CoachColors } from "../theme/coachTheme";
 
 type Nav = NativeStackNavigationProp<InterviewParamList>;
 
@@ -65,10 +66,10 @@ export function ClassicInterviewScreen() {
 
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
-      <View style={{ flex: 1 }}>
-        <Appbar.Header elevated>
+      <View style={{ flex: 1, backgroundColor: CoachColors.background }}>
+        <Appbar.Header elevated style={{ backgroundColor: CoachColors.componentSurface }} theme={CoachAppBarTheme}>
           <Appbar.BackAction onPress={() => navigation.goBack()} />
-          <Appbar.Content title="Klasik mülakat" />
+          <Appbar.Content title="Klasik mülakat" titleStyle={{ color: CoachColors.onComponentSurface }} />
         </Appbar.Header>
         <ScrollView contentContainerStyle={{ padding: 12 }}>
           {start.isPending ? <Text>Yükleniyor…</Text> : null}

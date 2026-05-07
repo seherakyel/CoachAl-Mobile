@@ -23,7 +23,7 @@ import { analyzeCompany, uploadCvPdf } from "../services/api";
 import { extractDetail } from "../services/apiClient";
 import { usePipelineStore } from "../store/usePipelineStore";
 import type { AnalyzeParamList } from "../app/navigationTypes";
-import { CoachColors, CoachRadii, CoachShadow } from "../theme/coachTheme";
+import { CoachAppBarTheme, CoachColors, CoachRadii, CoachShadow } from "../theme/coachTheme";
 
 type Nav = NativeStackNavigationProp<AnalyzeParamList>;
 
@@ -139,9 +139,9 @@ export function CvAnalysisScreen() {
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
       <View style={{ flex: 1, backgroundColor: CoachColors.background }}>
-        <Appbar.Header elevated style={{ backgroundColor: CoachColors.surfaceContainerLowest }}>
+        <Appbar.Header elevated style={{ backgroundColor: CoachColors.componentSurface }} theme={CoachAppBarTheme}>
           {navigation.canGoBack() ? <Appbar.BackAction onPress={() => navigation.goBack()} /> : null}
-          <Appbar.Content title="CV Analizi" titleStyle={{ fontWeight: "700" }} />
+          <Appbar.Content title="CV Analizi" titleStyle={{ fontWeight: "700", color: CoachColors.onComponentSurface }} />
         </Appbar.Header>
         <ScrollView contentContainerStyle={{ padding: 24, paddingBottom: 120, maxWidth: 800, alignSelf: "center", width: "100%" }}>
           <Text style={{ fontSize: 30, fontWeight: "600", color: CoachColors.onSurface, marginBottom: 8 }}>
@@ -218,7 +218,7 @@ export function CvAnalysisScreen() {
                   marginBottom: 16,
                 }}
               >
-                <MaterialCommunityIcons name="cloud-upload-outline" size={36} color={CoachColors.primary} />
+                <MaterialCommunityIcons name="cloud-upload-outline" size={36} color={CoachColors.secondary} />
               </View>
               <Text style={{ fontSize: 18, color: CoachColors.onSurface, marginBottom: 8, textAlign: "center" }}>
                 CV&apos;nizi buraya dokunarak dosya seçin
@@ -230,7 +230,7 @@ export function CvAnalysisScreen() {
 
             {uploading || uploadMut.isPending ? (
               <View style={{ flexDirection: "row", alignItems: "center", gap: 12, marginTop: 12 }}>
-                <ActivityIndicator color={CoachColors.primary} />
+                <ActivityIndicator color={CoachColors.secondary} />
                 <Text style={{ fontSize: 14, color: CoachColors.onSurfaceVariant }}>
                   PDF analiz ediliyor, lütfen bekleyin…
                 </Text>
@@ -311,7 +311,7 @@ export function CvAnalysisScreen() {
                 style={{
                   ...StyleSheetAbsolute,
                   borderRadius: CoachRadii.xl,
-                  backgroundColor: "rgba(252,248,255,0.72)",
+                  backgroundColor: "rgba(247,249,251,0.78)",
                   alignItems: "center",
                   justifyContent: "center",
                   zIndex: 10,
@@ -368,7 +368,7 @@ export function CvAnalysisScreen() {
                   onChangeText={setCompanyName}
                   placeholder="örn: Trendyol"
                   outlineColor={CoachColors.outlineVariant}
-                  activeOutlineColor={CoachColors.primaryContainer}
+                  activeOutlineColor={CoachColors.secondary}
                   style={{ backgroundColor: CoachColors.surfaceContainerLowest }}
                   editable={step2Unlocked}
                 />
@@ -383,7 +383,7 @@ export function CvAnalysisScreen() {
                   onChangeText={setPositionTitle}
                   placeholder="örn: Backend Developer"
                   outlineColor={CoachColors.outlineVariant}
-                  activeOutlineColor={CoachColors.primaryContainer}
+                  activeOutlineColor={CoachColors.secondary}
                   style={{ backgroundColor: CoachColors.surfaceContainerLowest }}
                   editable={step2Unlocked}
                 />
@@ -405,7 +405,7 @@ export function CvAnalysisScreen() {
                   position: positionTitle.trim(),
                 });
               }}
-              buttonColor={CoachColors.primaryContainer}
+              buttonColor={CoachColors.primary}
               textColor={CoachColors.onPrimary}
               style={{ borderRadius: CoachRadii.md, paddingHorizontal: 8 }}
               contentStyle={{ paddingVertical: 8 }}

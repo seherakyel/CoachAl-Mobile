@@ -2,6 +2,8 @@ import { View } from "react-native";
 import Svg, { Circle } from "react-native-svg";
 import { Text } from "react-native-paper";
 
+import { CoachColors } from "../theme/coachTheme";
+
 type Props = {
   percent: number;
   size?: number;
@@ -9,7 +11,7 @@ type Props = {
   color?: string;
 };
 
-export function RadialScore({ percent, size = 132, stroke = 10, color = "#6366f1" }: Props) {
+export function RadialScore({ percent, size = 132, stroke = 10, color = CoachColors.accent }: Props) {
   const p = Math.max(0, Math.min(100, Number.isFinite(percent) ? percent : 0));
   const r = (size - stroke) / 2;
   const cx = size / 2;
@@ -23,7 +25,7 @@ export function RadialScore({ percent, size = 132, stroke = 10, color = "#6366f1
           cx={cx}
           cy={cy}
           r={r}
-          stroke="#e2e8f0"
+          stroke={CoachColors.outlineVariant}
           strokeWidth={stroke}
           fill="none"
         />

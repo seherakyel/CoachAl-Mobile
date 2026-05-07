@@ -11,6 +11,7 @@ import { InterviewTimer } from "../components/InterviewTimer";
 import { usePipelineStore } from "../store/usePipelineStore";
 import { useInterviewStore } from "../store/useInterviewStore";
 import type { InterviewParamList } from "../app/navigationTypes";
+import { CoachAppBarTheme, CoachColors } from "../theme/coachTheme";
 
 type Nav = NativeStackNavigationProp<InterviewParamList>;
 
@@ -84,10 +85,10 @@ export function QuizInterviewScreen() {
   };
 
   return (
-    <View style={{ flex: 1 }}>
-      <Appbar.Header elevated>
+    <View style={{ flex: 1, backgroundColor: CoachColors.background }}>
+      <Appbar.Header elevated style={{ backgroundColor: CoachColors.componentSurface }} theme={CoachAppBarTheme}>
         <Appbar.BackAction onPress={() => navigation.goBack()} />
-        <Appbar.Content title="Quiz mülakat" />
+        <Appbar.Content title="Quiz mülakat" titleStyle={{ color: CoachColors.onComponentSurface }} />
       </Appbar.Header>
       <ScrollView contentContainerStyle={{ padding: 12 }}>
         {start.isPending ? <Text>Yükleniyor…</Text> : null}

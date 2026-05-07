@@ -5,6 +5,7 @@ import { Appbar, Button, Card, Text } from "react-native-paper";
 import { useInterviewStore } from "../store/useInterviewStore";
 import { usePipelineStore } from "../store/usePipelineStore";
 import type { InterviewParamList } from "../app/navigationTypes";
+import { CoachAppBarTheme, CoachColors } from "../theme/coachTheme";
 
 type Nav = NativeStackNavigationProp<InterviewParamList>;
 
@@ -26,9 +27,9 @@ export function InterviewOutcomeScreen() {
   };
 
   return (
-    <View style={{ flex: 1 }}>
-      <Appbar.Header elevated>
-        <Appbar.Content title="Mülakat sonucu" />
+    <View style={{ flex: 1, backgroundColor: CoachColors.background }}>
+      <Appbar.Header elevated style={{ backgroundColor: CoachColors.componentSurface }} theme={CoachAppBarTheme}>
+        <Appbar.Content title="Mülakat sonucu" titleStyle={{ color: CoachColors.onComponentSurface }} />
       </Appbar.Header>
       <ScrollView contentContainerStyle={{ padding: 12 }}>
         {lastMode === "classic" && classic ? (

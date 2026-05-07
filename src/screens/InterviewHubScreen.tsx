@@ -10,7 +10,7 @@ import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityI
 import { listInterviews } from "../services/api";
 import { usePipelineStore } from "../store/usePipelineStore";
 import type { InterviewParamList, MainTabParamList } from "../app/navigationTypes";
-import { CoachColors, CoachRadii, CoachShadow } from "../theme/coachTheme";
+import { CoachColors, CoachRadii, CoachShadow, CoachGlass } from "../theme/coachTheme";
 
 type Nav = CompositeNavigationProp<
   NativeStackNavigationProp<InterviewParamList, "InterviewHub">,
@@ -22,7 +22,6 @@ export function InterviewHubScreen() {
   const cvId = usePipelineStore((s) => s.cvId);
   const profileId = usePipelineStore((s) => s.profileId);
   const companyName = usePipelineStore((s) => s.companyName);
-  const positionTitle = usePipelineStore((s) => s.positionTitle);
   const cvDisplayName = usePipelineStore((s) => s.cvDisplayName);
   const resetFlow = usePipelineStore((s) => s.resetFlow);
   const [snack, setSnack] = useState<string | null>(null);
@@ -45,11 +44,11 @@ export function InterviewHubScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: CoachColors.background }}>
       <ScrollView contentContainerStyle={{ padding: 24, paddingBottom: 120, maxWidth: 1024, width: "100%", alignSelf: "center" }}>
-        <Text style={{ fontSize: 36, fontWeight: "700", color: CoachColors.onSurface, marginBottom: 8 }}>
-          Mülakat Modu Seçimi
+        <Text style={{ fontSize: 30, fontWeight: "700", letterSpacing: -0.5, color: CoachColors.primary, marginBottom: 8 }}>
+          Mülakat hazırlığı
         </Text>
-        <Text style={{ fontSize: 18, lineHeight: 28, color: CoachColors.onSurfaceVariant, marginBottom: showSessionBanner ? 24 : 40 }}>
-          Pratik yapmak istediğiniz mülakat formatını seçin.
+        <Text style={{ fontSize: 17, lineHeight: 26, color: CoachColors.onSurfaceVariant, marginBottom: showSessionBanner ? 24 : 32 }}>
+          Gerçekçi senaryolarla becerilerinizi geliştirin.
         </Text>
 
         {showSessionBanner ? (
@@ -66,7 +65,7 @@ export function InterviewHubScreen() {
               marginBottom: 32,
             }}
           >
-            <MaterialCommunityIcons name="information-outline" size={22} color={CoachColors.primary} />
+            <MaterialCommunityIcons name="information-outline" size={22} color={CoachColors.secondary} />
             <View style={{ flex: 1 }}>
               <Text style={{ fontSize: 14, fontWeight: "600", color: CoachColors.onSurface }}>
                 {(cvDisplayName || "CV") + " → " + companyName + " için hazır"}
@@ -78,7 +77,7 @@ export function InterviewHubScreen() {
                 }}
                 style={{ marginTop: 6 }}
               >
-                <Text style={{ fontSize: 12, color: CoachColors.primary, textDecorationLine: "underline" }}>
+                <Text style={{ fontSize: 12, color: CoachColors.secondary, textDecorationLine: "underline" }}>
                   Farklı CV/şirket seç →
                 </Text>
               </Pressable>
@@ -89,9 +88,7 @@ export function InterviewHubScreen() {
         <View style={{ gap: 24 }}>
           <View
             style={{
-              backgroundColor: CoachColors.surfaceContainerLowest,
-              borderWidth: 1,
-              borderColor: CoachColors.outlineVariant,
+              ...CoachGlass,
               borderRadius: CoachRadii.xl,
               padding: 24,
               ...CoachShadow.card,
@@ -106,9 +103,23 @@ export function InterviewHubScreen() {
                 width: 128,
                 height: 128,
                 borderBottomLeftRadius: 128,
-                backgroundColor: "rgba(79,70,229,0.05)",
+                backgroundColor: "rgba(0, 88, 190, 0.06)",
               }}
             />
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 12 }}>
+              <View
+                style={{
+                  paddingHorizontal: 10,
+                  paddingVertical: 4,
+                  borderRadius: CoachRadii.full,
+                  backgroundColor: CoachColors.insightChipBg,
+                }}
+              >
+                <Text style={{ fontSize: 10, fontWeight: "700", color: CoachColors.secondary, letterSpacing: 0.4 }}>
+                  YAPAY ZEKA DESTEKLİ
+                </Text>
+              </View>
+            </View>
             <View
               style={{
                 width: 48,
@@ -117,36 +128,47 @@ export function InterviewHubScreen() {
                 backgroundColor: CoachColors.surfaceContainer,
                 alignItems: "center",
                 justifyContent: "center",
-                marginBottom: 24,
+                marginBottom: 16,
               }}
             >
-              <MaterialCommunityIcons name="code-tags" size={32} color={CoachColors.primary} />
+              <MaterialCommunityIcons name="head-lightbulb-outline" size={28} color={CoachColors.secondary} />
             </View>
-            <Text style={{ fontSize: 24, fontWeight: "600", color: CoachColors.onSurface, marginBottom: 12 }}>Klasik Sınav</Text>
-            <Text style={{ fontSize: 16, lineHeight: 24, color: CoachColors.onSurfaceVariant, marginBottom: 32, flexGrow: 1 }}>
-              Açık uçlu, algoritma ve sistem tasarımı ağırlıklı klasik teknik mülakat formatı.
+            <Text style={{ fontSize: 22, fontWeight: "600", color: CoachColors.primary, marginBottom: 8 }}>
+              Klasik teknik mülakat
             </Text>
+            <Text style={{ fontSize: 15, lineHeight: 22, color: CoachColors.onSurfaceVariant, marginBottom: 16, flexGrow: 1 }}>
+              Yazılım mühendisliği temelleri, sistem tasarımı ve problem çözme odaklı kapsamlı oturum.
+            </Text>
+            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 16, marginBottom: 20 }}>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                <MaterialCommunityIcons name="clock-outline" size={18} color={CoachColors.onSurfaceVariant} />
+                <Text style={{ fontSize: 13, color: CoachColors.onSurfaceVariant }}>~45 dk</Text>
+              </View>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                <MaterialCommunityIcons name="signal" size={18} color={CoachColors.onSurfaceVariant} />
+                <Text style={{ fontSize: 13, color: CoachColors.onSurfaceVariant }}>Orta / zor</Text>
+              </View>
+            </View>
             <Pressable
               onPress={() => {
                 if (!requireContext()) return;
                 navigation.navigate("ClassicInterview");
               }}
               style={{
-                backgroundColor: CoachColors.primaryContainer,
+                backgroundColor: CoachColors.primary,
                 paddingVertical: 14,
-                borderRadius: CoachRadii.md,
+                borderRadius: CoachRadii.lg,
                 alignItems: "center",
+                ...CoachShadow.elevated,
               }}
             >
-              <Text style={{ fontSize: 14, fontWeight: "500", color: CoachColors.onPrimary }}>Başla</Text>
+              <Text style={{ fontSize: 15, fontWeight: "600", color: CoachColors.onPrimary }}>Pratiğe başla</Text>
             </Pressable>
           </View>
 
           <View
             style={{
-              backgroundColor: CoachColors.surfaceContainerLowest,
-              borderWidth: 1,
-              borderColor: CoachColors.outlineVariant,
+              ...CoachGlass,
               borderRadius: CoachRadii.xl,
               padding: 24,
               ...CoachShadow.card,
@@ -161,9 +183,23 @@ export function InterviewHubScreen() {
                 width: 128,
                 height: 128,
                 borderBottomLeftRadius: 128,
-                backgroundColor: "rgba(213,224,248,0.5)",
+                backgroundColor: "rgba(218, 226, 253, 0.45)",
               }}
             />
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 12 }}>
+              <View
+                style={{
+                  paddingHorizontal: 10,
+                  paddingVertical: 4,
+                  borderRadius: CoachRadii.full,
+                  backgroundColor: CoachColors.surfaceContainerLow,
+                }}
+              >
+                <Text style={{ fontSize: 10, fontWeight: "700", color: CoachColors.onSurfaceVariant, letterSpacing: 0.4 }}>
+                  ZAMAN SINIRLI
+                </Text>
+              </View>
+            </View>
             <View
               style={{
                 width: 48,
@@ -172,15 +208,25 @@ export function InterviewHubScreen() {
                 backgroundColor: CoachColors.surfaceContainer,
                 alignItems: "center",
                 justifyContent: "center",
-                marginBottom: 24,
+                marginBottom: 16,
               }}
             >
-              <MaterialCommunityIcons name="timer-outline" size={32} color={CoachColors.primary} />
+              <MaterialCommunityIcons name="timer-outline" size={28} color={CoachColors.secondary} />
             </View>
-            <Text style={{ fontSize: 24, fontWeight: "600", color: CoachColors.onSurface, marginBottom: 12 }}>Teknik Quiz</Text>
-            <Text style={{ fontSize: 16, lineHeight: 24, color: CoachColors.onSurfaceVariant, marginBottom: 32 }}>
-              60 saniyelik çoktan seçmeli hızlı test. Temel konseptleri ve bilgi düzeyini ölçer.
+            <Text style={{ fontSize: 22, fontWeight: "600", color: CoachColors.primary, marginBottom: 8 }}>Teknik quiz</Text>
+            <Text style={{ fontSize: 15, lineHeight: 22, color: CoachColors.onSurfaceVariant, marginBottom: 16 }}>
+              Çoktan seçmeli hızlı soru seti; temel kavramları ölçer.
             </Text>
+            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 16, marginBottom: 20 }}>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                <MaterialCommunityIcons name="clock-outline" size={18} color={CoachColors.onSurfaceVariant} />
+                <Text style={{ fontSize: 13, color: CoachColors.onSurfaceVariant }}>~20 dk</Text>
+              </View>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                <MaterialCommunityIcons name="signal" size={18} color={CoachColors.onSurfaceVariant} />
+                <Text style={{ fontSize: 13, color: CoachColors.onSurfaceVariant }}>Kolay / orta</Text>
+              </View>
+            </View>
             <Pressable
               onPress={() => {
                 if (!requireContext()) return;
@@ -191,22 +237,22 @@ export function InterviewHubScreen() {
                 borderWidth: 1,
                 borderColor: CoachColors.outlineVariant,
                 paddingVertical: 14,
-                borderRadius: CoachRadii.md,
+                borderRadius: CoachRadii.lg,
                 alignItems: "center",
               }}
             >
-              <Text style={{ fontSize: 14, fontWeight: "500", color: CoachColors.onSurface }}>Başla</Text>
+              <Text style={{ fontSize: 15, fontWeight: "600", color: CoachColors.primary }}>Quiz&apos;e başla</Text>
             </Pressable>
           </View>
 
           <View
             style={{
-              backgroundColor: "rgba(252,248,255,0.5)",
+              backgroundColor: "rgba(247, 249, 251, 0.55)",
               borderWidth: 1,
-              borderColor: "rgba(199,196,216,0.5)",
+              borderColor: "rgba(198, 198, 205, 0.4)",
               borderRadius: CoachRadii.xl,
               padding: 24,
-              opacity: 0.65,
+              opacity: 0.72,
               overflow: "hidden",
             }}
           >
@@ -263,27 +309,59 @@ export function InterviewHubScreen() {
         {(history.data?.items ?? []).length === 0 ? (
           <Text style={{ fontSize: 13, color: CoachColors.onSurfaceVariant }}>Kayıt yok</Text>
         ) : (
-          (history.data?.items ?? []).map((it) => (
-            <View
-              key={it.session_id}
-              style={{
-                borderWidth: 1,
-                borderColor: CoachColors.outlineVariant,
-                borderRadius: CoachRadii.md,
-                padding: 16,
-                marginBottom: 10,
-                backgroundColor: CoachColors.surfaceContainerLowest,
-              }}
-            >
-              <Text style={{ fontWeight: "700", fontSize: 15, color: CoachColors.onSurface }}>{it.type}</Text>
-              <Text style={{ fontSize: 13, color: CoachColors.onSurfaceVariant, marginTop: 6 }}>
-                Skor: {it.score === null || it.score === undefined ? "—" : String(it.score)}
-              </Text>
-              <Text style={{ fontSize: 12, color: CoachColors.outline, marginTop: 4 }} numberOfLines={1}>
-                {it.session_id}
-              </Text>
-            </View>
-          ))
+          (history.data?.items ?? []).map((it) => {
+            const sc = it.score;
+            const strong = sc != null && sc >= 80;
+            const mid = sc != null && sc >= 60 && sc < 80;
+            return (
+              <View
+                key={it.session_id}
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  borderWidth: 1,
+                  borderColor: CoachColors.outlineVariant,
+                  borderRadius: CoachRadii.lg,
+                  padding: 16,
+                  marginBottom: 10,
+                  backgroundColor: CoachColors.surfaceContainerLowest,
+                  ...CoachShadow.card,
+                }}
+              >
+                <View style={{ flex: 1, minWidth: 0, paddingRight: 12 }}>
+                  <Text style={{ fontWeight: "700", fontSize: 15, color: CoachColors.primary }}>{it.type}</Text>
+                  <Text style={{ fontSize: 12, color: CoachColors.outline, marginTop: 4 }} numberOfLines={1}>
+                    {it.session_id}
+                  </Text>
+                </View>
+                <View
+                  style={{
+                    paddingHorizontal: 12,
+                    paddingVertical: 6,
+                    borderRadius: CoachRadii.full,
+                    backgroundColor: strong
+                      ? "rgba(34, 197, 94, 0.12)"
+                      : mid
+                        ? CoachColors.surfaceContainer
+                        : CoachColors.surfaceVariant,
+                    borderWidth: 1,
+                    borderColor: strong ? CoachColors.outline : CoachColors.outlineVariant,
+                  }}
+                >
+                  <Text
+                    style={{
+                      fontSize: 13,
+                      fontWeight: "700",
+                      color: strong ? CoachColors.primary : CoachColors.onSurfaceVariant,
+                    }}
+                  >
+                    {sc == null ? "—" : `${sc}%`}
+                  </Text>
+                </View>
+              </View>
+            );
+          })
         )}
       </ScrollView>
       <Snackbar visible={!!snack} onDismiss={() => setSnack(null)} duration={4000}>

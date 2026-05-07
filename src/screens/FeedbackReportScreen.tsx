@@ -9,6 +9,7 @@ import { generateFeedback } from "../services/api";
 import { extractDetail } from "../services/apiClient";
 import { usePipelineStore } from "../store/usePipelineStore";
 import type { ReportsParamList } from "../app/navigationTypes";
+import { CoachAppBarTheme, CoachColors } from "../theme/coachTheme";
 
 type Nav = NativeStackNavigationProp<ReportsParamList>;
 type R = RouteProp<ReportsParamList, "FeedbackReport">;
@@ -33,10 +34,10 @@ export function FeedbackReportScreen() {
   const data = mutation.data;
 
   return (
-    <View style={{ flex: 1 }}>
-      <Appbar.Header elevated>
+    <View style={{ flex: 1, backgroundColor: CoachColors.background }}>
+      <Appbar.Header elevated style={{ backgroundColor: CoachColors.componentSurface }} theme={CoachAppBarTheme}>
         <Appbar.BackAction onPress={() => navigation.goBack()} />
-        <Appbar.Content title="CV Doktoru" />
+        <Appbar.Content title="CV Doktoru" titleStyle={{ color: CoachColors.onComponentSurface }} />
       </Appbar.Header>
       <ScrollView contentContainerStyle={{ padding: 12, paddingBottom: 96 }}>
         <Card mode="outlined">

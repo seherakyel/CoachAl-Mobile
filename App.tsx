@@ -7,6 +7,7 @@ import { NavigationRoot } from "./src/app/NavigationRoot";
 import { AppProviders } from "./src/app/providers";
 import { AuthScreen } from "./src/screens/AuthScreen";
 import { extractDetail } from "./src/services/apiClient";
+import { CoachColors } from "./src/theme/coachTheme";
 
 function Gate() {
   const phase = useAuthStore((s) => s.phase);
@@ -21,7 +22,7 @@ function Gate() {
   }
   if (!user) {
     return (
-      <View style={{ flex: 1 }}>
+      <View style={{ flex: 1, backgroundColor: CoachColors.background }}>
         {bootstrapError ? (
           <Text style={{ padding: 12, textAlign: "center", color: "#b91c1c" }}>{bootstrapError}</Text>
         ) : null}

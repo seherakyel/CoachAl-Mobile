@@ -7,7 +7,7 @@ import { Appbar, Button, Menu, Snackbar, Text } from "react-native-paper";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 import { listAlignments, listInterviews } from "../services/api";
 import type { ReportsParamList } from "../app/navigationTypes";
-import { CoachColors, CoachRadii, CoachShadow } from "../theme/coachTheme";
+import { CoachAppBarTheme, CoachColors, CoachRadii, CoachShadow } from "../theme/coachTheme";
 
 type Nav = NativeStackNavigationProp<ReportsParamList>;
 
@@ -35,8 +35,8 @@ export function ReportsHubScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: CoachColors.background }}>
-      <Appbar.Header elevated style={{ backgroundColor: CoachColors.surfaceContainerLowest }}>
-        <Appbar.Content title="Raporlar" titleStyle={{ fontWeight: "700" }} />
+      <Appbar.Header elevated style={{ backgroundColor: CoachColors.componentSurface }} theme={CoachAppBarTheme}>
+        <Appbar.Content title="Raporlar" titleStyle={{ fontWeight: "700", color: CoachColors.onComponentSurface }} />
       </Appbar.Header>
       <ScrollView contentContainerStyle={{ padding: 24, paddingBottom: 120, maxWidth: 1024, width: "100%", alignSelf: "center" }}>
         <Text style={{ fontSize: 36, fontWeight: "700", color: CoachColors.onSurface, marginBottom: 8 }}>Sonuç Raporu</Text>

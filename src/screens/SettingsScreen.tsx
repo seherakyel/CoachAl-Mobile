@@ -109,7 +109,7 @@ export function SettingsScreen() {
                 onChangeText={setDisplayName}
                 placeholder="Adınızı girin"
                 outlineColor={CoachColors.outlineVariant}
-                activeOutlineColor={CoachColors.primaryContainer}
+                activeOutlineColor={CoachColors.secondary}
                 style={{ backgroundColor: CoachColors.surfaceContainerLow }}
               />
             </View>
@@ -131,7 +131,7 @@ export function SettingsScreen() {
                 }
                 setSaving(false);
               }}
-              buttonColor={CoachColors.primaryContainer}
+              buttonColor={CoachColors.primary}
               textColor={CoachColors.onPrimary}
               style={{ alignSelf: "flex-start", borderRadius: CoachRadii.md }}
             >
@@ -178,7 +178,7 @@ export function SettingsScreen() {
                 placeholder="••••••••"
                 secureTextEntry
                 outlineColor={CoachColors.outlineVariant}
-                activeOutlineColor={CoachColors.primaryContainer}
+                activeOutlineColor={CoachColors.secondary}
                 style={{ backgroundColor: CoachColors.surfaceContainerLow }}
               />
             </View>
@@ -216,7 +216,7 @@ export function SettingsScreen() {
                 }
                 setPwBusy(false);
               }}
-              buttonColor={CoachColors.primaryContainer}
+              buttonColor={CoachColors.primary}
               textColor={CoachColors.onPrimary}
               style={{ alignSelf: "flex-start", borderRadius: CoachRadii.md }}
             >

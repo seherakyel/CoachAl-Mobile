@@ -1,7 +1,7 @@
 import { NavigationContainer, DefaultTheme } from "@react-navigation/native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import type { BottomTabBarProps } from "@react-navigation/bottom-tabs";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 import { DashboardScreen } from "../screens/DashboardScreen";
 import { CvAnalysisScreen } from "../screens/CvAnalysisScreen";
 import { AlignmentResultScreen } from "../screens/AlignmentResultScreen";
@@ -19,11 +19,16 @@ import type {
   ReportsParamList,
 } from "./navigationTypes";
 import { CoachColors } from "../theme/coachTheme";
+import { CoachTabBar } from "../components/chrome/CoachTabBar";
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
 const AnalyzeStack = createNativeStackNavigator<AnalyzeParamList>();
 const InterviewStack = createNativeStackNavigator<InterviewParamList>();
 const ReportsStack = createNativeStackNavigator<ReportsParamList>();
+
+function renderCoachTabBar(props: BottomTabBarProps) {
+  return <CoachTabBar {...props} />;
+}
 
 function AnalyzeNavigator() {
   return (
@@ -57,56 +62,16 @@ function ReportsNavigator() {
 function MainTabs() {
   return (
     <Tab.Navigator
+      tabBar={renderCoachTabBar}
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: CoachColors.primary,
-        tabBarInactiveTintColor: CoachColors.slate500,
-        tabBarStyle: {
-          borderTopColor: CoachColors.slate100,
-          backgroundColor: CoachColors.surfaceContainerLowest,
-        },
       }}
     >
-      <Tab.Screen
-        name="Home"
-        component={DashboardScreen}
-        options={{
-          title: "Panel",
-          tabBarIcon: ({ color, size }) => <MaterialCommunityIcons name="view-dashboard-outline" color={color} size={size} />,
-        }}
-      />
-      <Tab.Screen
-        name="CvAnalysis"
-        component={AnalyzeNavigator}
-        options={{
-          title: "CV Analizi",
-          tabBarIcon: ({ color, size }) => <MaterialCommunityIcons name="file-document-outline" color={color} size={size} />,
-        }}
-      />
-      <Tab.Screen
-        name="Interviews"
-        component={InterviewNavigator}
-        options={{
-          title: "Mülakatlar",
-          tabBarIcon: ({ color, size }) => <MaterialCommunityIcons name="microphone-message" color={color} size={size} />,
-        }}
-      />
-      <Tab.Screen
-        name="Reports"
-        component={ReportsNavigator}
-        options={{
-          title: "Raporlar",
-          tabBarIcon: ({ color, size }) => <MaterialCommunityIcons name="chart-box-outline" color={color} size={size} />,
-        }}
-      />
-      <Tab.Screen
-        name="Settings"
-        component={SettingsScreen}
-        options={{
-          title: "Ayarlar",
-          tabBarIcon: ({ color, size }) => <MaterialCommunityIcons name="cog-outline" color={color} size={size} />,
-        }}
-      />
+      <Tab.Screen name="Home" component={DashboardScreen} options={{ tabBarLabel: "Panel" }} />
+      <Tab.Screen name="CvAnalysis" component={AnalyzeNavigator} options={{ tabBarLabel: "CV Analizi" }} />
+      <Tab.Screen name="Interviews" component={InterviewNavigator} options={{ tabBarLabel: "Mülakatlar" }} />
+      <Tab.Screen name="Reports" component={ReportsNavigator} options={{ tabBarLabel: "Raporlar" }} />
+      <Tab.Screen name="Settings" component={SettingsScreen} options={{ tabBarLabel: "Ayarlar" }} />
     </Tab.Navigator>
   );
 }
@@ -116,10 +81,10 @@ const navTheme = {
   colors: {
     ...DefaultTheme.colors,
     background: CoachColors.background,
-    primary: CoachColors.primaryContainer,
-    card: CoachColors.surfaceContainerLowest,
+    primary: CoachColors.primary,
+    card: CoachColors.surfaceCard,
     text: CoachColors.onSurface,
-    border: CoachColors.slate100,
+    border: CoachColors.outlineVariant,
   },
 };
 

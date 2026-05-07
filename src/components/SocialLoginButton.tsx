@@ -1,13 +1,54 @@
-import { Button } from "react-native-paper";
+import { Pressable, Text, View } from "react-native";
+import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
+import { CoachColors, CoachRadii } from "../theme/coachTheme";
 
 type Props = {
-  onUnavailable: () => void;
+  onGoogle: () => void;
+  onLinkedIn: () => void;
 };
 
-export function SocialLoginButton({ onUnavailable }: Props) {
+export function SocialLoginRow({ onGoogle, onLinkedIn }: Props) {
   return (
-    <Button mode="outlined" icon="google" onPress={onUnavailable}>
-      Google ile devam et
-    </Button>
+    <View style={{ gap: 10 }}>
+      <Text style={{ fontSize: 13, color: CoachColors.onSurfaceVariant, textAlign: "center", marginBottom: 4 }}>
+        veya şununla devam et
+      </Text>
+      <Pressable
+        onPress={onGoogle}
+        style={({ pressed }) => ({
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 10,
+          paddingVertical: 14,
+          borderRadius: CoachRadii.lg,
+          borderWidth: 1,
+          borderColor: CoachColors.outlineVariant,
+          backgroundColor: CoachColors.surfaceContainerLowest,
+          opacity: pressed ? 0.9 : 1,
+        })}
+      >
+        <MaterialCommunityIcons name="google" size={22} color={CoachColors.primary} />
+        <Text style={{ fontSize: 15, fontWeight: "600", color: CoachColors.onSurface }}>Google</Text>
+      </Pressable>
+      <Pressable
+        onPress={onLinkedIn}
+        style={({ pressed }) => ({
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 10,
+          paddingVertical: 14,
+          borderRadius: CoachRadii.lg,
+          borderWidth: 1,
+          borderColor: CoachColors.outlineVariant,
+          backgroundColor: CoachColors.surfaceContainerLowest,
+          opacity: pressed ? 0.9 : 1,
+        })}
+      >
+        <MaterialCommunityIcons name="linkedin" size={22} color={CoachColors.softIndigo} />
+        <Text style={{ fontSize: 15, fontWeight: "600", color: CoachColors.onSurface }}>LinkedIn</Text>
+      </Pressable>
+    </View>
   );
 }
