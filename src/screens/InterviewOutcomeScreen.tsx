@@ -1,0 +1,77 @@
+import { View, ScrollView } from "react-native";
+import { useNavigation } from "@react-navigation/native";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { Appbar, Button, Card, Text } from "react-native-paper";
+import { useInterviewStore } from "../store/useInterviewStore";
+import { usePipelineStore } from "../store/usePipelineStore";
+import type { InterviewParamList } from "../app/navigationTypes";
+
+type Nav = NativeStackNavigationProp<InterviewParamList>;
+
+export function InterviewOutcomeScreen() {
+  const navigation = useNavigation<Nav>();
+  const lastMode = useInterviewStore((s) => s.lastMode);
+  const classic = useInterviewStore((s) => s.classicResult);
+  const quiz = useInterviewStore((s) => s.quizResult);
+  const lastSessionId = useInterviewStore((s) => s.lastSessionId);
+  const alignmentId = usePipelineStore((s) => s.alignmentId);
+
+  const openFeedback = () => {
+    const parent = navigation.getParent() as { navigate: (name: string, params?: Record<string, unknown>) => void } | undefined;
+    if (!parent) return;
+    parent.navigate("Analiz", {
+      screen: "FeedbackReport",
+      params: { sessionId: lastSessionId, alignmentId: alignmentId ?? null },
+    });
+  };
+
+  return (
+    <View style={{ flex: 1 }}>
+      <Appbar.Header elevated>
+        <Appbar.Content title="Mülakat sonucu" />
+      </Appbar.Header>
+      <ScrollView contentContainerStyle={{ padding: 12 }}>
+        {lastMode === "classic" && classic ? (
+          <Card mode="outlined">
+            <Card.Content>
+              <Text variant="titleLarge" style={{ fontWeight: "800" }}>
+                Skor: {String(classic.total_score)}
+              </Text>
+              <Text variant="bodyMedium" style={{ marginTop: 10 }}>
+                {classic.feedback}
+              </Text>
+              <Text variant="bodySmall" style={{ marginTop: 10, opacity: 0.7 }}>
+                Oturum: {classic.session_id}
+              </Text>
+            </Card.Content>
+          </Card>
+        ) : null}
+
+        {lastMode === "quiz" && quiz ? (
+          <Card mode="outlined">
+            <Card.Content>
+              <Text variant="titleLarge" style={{ fontWeight: "800" }}>
+                Skor: {String(quiz.total_score)}
+              </Text>
+              <Text variant="bodyMedium" style={{ marginTop: 10 }}>
+                Doğru: {String(quiz.correct_count)} / {String(quiz.total_questions)}
+              </Text>
+              <Text variant="bodySmall" style={{ marginTop: 10, opacity: 0.7 }}>
+                Oturum: {quiz.session_id}
+              </Text>
+            </Card.Content>
+          </Card>
+        ) : null}
+
+        <View style={{ height: 12 }} />
+        <Button mode="contained" disabled={!alignmentId || !lastSessionId} onPress={openFeedback}>
+          Mülakatla birlikte AI raporu
+        </Button>
+        <View style={{ height: 10 }} />
+        <Button mode="outlined" onPress={() => navigation.navigate("InterviewHub")}>
+          Merkeze dön
+        </Button>
+      </ScrollView>
+    </View>
+  );
+}
