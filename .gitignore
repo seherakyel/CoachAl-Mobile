@@ -62,7 +62,6 @@ android/**/.cxx/
 android/.cxx/
 externalNativeBuild/
 android/**/.externalNativeBuild/
-.android/
 android/app/release/
 android/captures/
 android/local.properties
