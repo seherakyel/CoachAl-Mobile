@@ -4,7 +4,8 @@
   "main": "index.js",
   "private": true,
   "scripts": {
-    "android": "(adb reverse tcp:8000 tcp:8000 || true) && react-native run-android && (adb reverse tcp:8000 tcp:8000 || true)",
+    "android": "react-native run-android",
+    "present:android": "adb wait-for-device && adb reverse tcp:8000 tcp:8000 && react-native run-android",
     "adb:reverse": "adb reverse tcp:8000 tcp:8000",
     "ios": "react-native run-ios",
     "start": "react-native start",
