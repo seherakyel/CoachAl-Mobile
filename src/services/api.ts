@@ -203,45 +203,90 @@ export async function getHealth(): Promise<HealthResponse> {
   return res.data;
 }
 
-/** Android'de axios + multipart sık ERR_NETWORK verir; fetch RN ile daha güvenilir. */
 const CV_UPLOAD_TIMEOUT_MS = 600_000;
+const CV_UPLOAD_MAX_RETRIES = 2;
+const CV_UPLOAD_RETRY_DELAY_MS = 1500;
 
-export async function uploadCvPdf(form: FormData): Promise<CvUploadResponse> {
-  const base = getApiBaseUrl().replace(/\/$/, "");
-  const token = await getIdToken();
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), CV_UPLOAD_TIMEOUT_MS);
-  try {
-    const headers: Record<string, string> = {};
-    if (token) headers.Authorization = `Bearer ${token}`;
+export type UploadProgress = "uploading" | "processing" | "finalizing";
 
-    const res = await fetch(`${base}/api/cv/upload`, {
-      method: "POST",
-      headers,
-      body: form,
-      signal: controller.signal,
-    });
+export interface CvUploadOptions {
+  signal?: AbortSignal;
+  onProgress?: (phase: UploadProgress) => void;
+}
 
-    const text = await res.text();
-    let data: unknown;
+export async function uploadCvPdf(
+  form: FormData,
+  opts: CvUploadOptions = {},
+): Promise<CvUploadResponse> {
+  const { signal: externalSignal, onProgress } = opts;
+
+  let lastError: unknown;
+
+  for (let attempt = 0; attempt <= CV_UPLOAD_MAX_RETRIES; attempt++) {
+    if (externalSignal?.aborted) throw makeAbortError();
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), CV_UPLOAD_TIMEOUT_MS);
+
+    const abortOnExternal = () => controller.abort();
+    externalSignal?.addEventListener("abort", abortOnExternal, { once: true });
+
     try {
-      data = text ? JSON.parse(text) : null;
-    } catch {
-      data = null;
-    }
+      onProgress?.("uploading");
 
-    if (!res.ok) {
-      const detail = parseFastApiDetail(data, text, res.status);
-      throw new Error(detail);
-    }
+      const base = getApiBaseUrl().replace(/\/$/, "");
+      const token = await getIdToken();
+      const headers: Record<string, string> = {};
+      if (token) headers.Authorization = `Bearer ${token}`;
 
-    if (!data || typeof data !== "object") {
-      throw new Error("Geçersiz sunucu yanıtı");
+      const res = await fetch(`${base}/api/cv/upload`, {
+        method: "POST",
+        headers,
+        body: form,
+        signal: controller.signal,
+      });
+
+      onProgress?.("processing");
+
+      const text = await res.text();
+      let data: unknown;
+      try { data = text ? JSON.parse(text) : null; } catch { data = null; }
+
+      if (!res.ok) {
+        const detail = parseFastApiDetail(data, text, res.status);
+        if (res.status >= 400 && res.status < 500) throw new Error(detail);
+        lastError = new Error(detail);
+        if (attempt < CV_UPLOAD_MAX_RETRIES) {
+          await sleep(CV_UPLOAD_RETRY_DELAY_MS * (attempt + 1));
+          continue;
+        }
+        throw lastError;
+      }
+
+      onProgress?.("finalizing");
+
+      if (!data || typeof data !== "object") throw new Error("Geçersiz sunucu yanıtı");
+      return data as CvUploadResponse;
+    } catch (e) {
+      if (externalSignal?.aborted) throw makeAbortError();
+
+      const isRetryable =
+        e instanceof TypeError ||
+        (e instanceof Error && /network|abort|timeout/i.test(e.message));
+
+      if (isRetryable && attempt < CV_UPLOAD_MAX_RETRIES) {
+        lastError = e;
+        await sleep(CV_UPLOAD_RETRY_DELAY_MS * (attempt + 1));
+        continue;
+      }
+      throw e;
+    } finally {
+      clearTimeout(timeoutId);
+      externalSignal?.removeEventListener("abort", abortOnExternal);
     }
-    return data as CvUploadResponse;
-  } finally {
-    clearTimeout(timeoutId);
   }
+
+  throw lastError ?? new Error("CV yükleme başarısız");
 }
 
 function parseFastApiDetail(data: unknown, rawText: string, status: number): string {
@@ -251,6 +296,16 @@ function parseFastApiDetail(data: unknown, rawText: string, status: number): str
     if (Array.isArray(d)) return d.map((x) => String(x)).join("\n");
   }
   return rawText.trim() || `HTTP ${status}`;
+}
+
+function sleep(ms: number) {
+  return new Promise<void>((r) => setTimeout(r, ms));
+}
+
+function makeAbortError(): Error {
+  const e = new Error("Aborted");
+  e.name = "AbortError";
+  return e;
 }
 
 export async function analyzeCompany(body: CompanyAnalyzeBody): Promise<CompanyAnalyzeResponse> {

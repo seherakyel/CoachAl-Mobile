@@ -4,16 +4,14 @@ import { getIdToken } from "./firebaseAuth";
 
 export const api = axios.create({
   baseURL: `${getApiBaseUrl()}/api`,
-  timeout: 120000,
+  timeout: 120_000,
 });
 
 api.interceptors.request.use(async (config) => {
   config.baseURL = `${getApiBaseUrl()}/api`;
   const token = await getIdToken();
   const headers = AxiosHeaders.from(config.headers ?? {});
-  if (token) {
-    headers.set("Authorization", `Bearer ${token}`);
-  }
+  if (token) headers.set("Authorization", `Bearer ${token}`);
   if (typeof FormData !== "undefined" && config.data instanceof FormData) {
     headers.delete("Content-Type");
   }
@@ -21,33 +19,37 @@ api.interceptors.request.use(async (config) => {
   return config;
 });
 
-function isAbortError(error: unknown): boolean {
-  if (!error || typeof error !== "object") return false;
-  const name = "name" in error ? String((error as { name?: unknown }).name) : "";
-  if (name === "AbortError") return true;
-  const msg = "message" in error ? String((error as { message?: unknown }).message) : "";
-  return /aborted|abort/i.test(msg);
-}
-
 export function extractDetail(error: unknown): string {
-  if (isAbortError(error)) {
-    return "İstek zaman aşımına uğradı (CV işlemi uzun sürebilir). Bir süre sonra tekrar deneyin.";
+  if (isAbortLike(error)) {
+    return "İstek zaman aşımına uğradı. Bir süre sonra tekrar deneyin.";
   }
+
   const ax = error as AxiosError<{ detail?: string | string[] }>;
+
   if (!ax.response && ax.code === "ECONNABORTED") {
-    return "İstek zaman aşımına uğradı (CV işlemi uzun sürebilir). Bir süre sonra tekrar deneyin.";
+    return "İstek zaman aşımına uğradı. Bir süre sonra tekrar deneyin.";
   }
-  const noResponse = !ax.response;
-  if (
-    noResponse &&
-    (ax.code === "ERR_NETWORK" ||
-      (typeof ax.message === "string" && ax.message.toLowerCase().includes("network")))
-  ) {
+
+  if (!ax.response && (ax.code === "ERR_NETWORK" || isNetworkMsg(ax.message))) {
     return `API'ye ulaşılamadı (${getApiBaseUrl()}). Bağlantı ve .env.local içindeki API_BASE_URL değerini kontrol edin.`;
   }
+
   const d = ax.response?.data?.detail;
-  if (Array.isArray(d)) return d.map((x) => String(x)).join("\n");
+  if (Array.isArray(d)) return d.map(String).join("\n");
   if (typeof d === "string") return d;
   if (ax.message) return ax.message;
+  if (error instanceof Error && error.message) return error.message;
   return "İstek tamamlanamadı";
+}
+
+function isAbortLike(e: unknown): boolean {
+  if (!e || typeof e !== "object") return false;
+  const name = "name" in e ? String((e as { name?: unknown }).name) : "";
+  if (name === "AbortError") return true;
+  const msg = "message" in e ? String((e as { message?: unknown }).message) : "";
+  return /aborted/i.test(msg);
+}
+
+function isNetworkMsg(msg: unknown): boolean {
+  return typeof msg === "string" && msg.toLowerCase().includes("network");
 }

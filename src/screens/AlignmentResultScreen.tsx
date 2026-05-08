@@ -1,12 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
-import { View, ScrollView } from "react-native";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { View, ScrollView, ActivityIndicator } from "react-native";
+import { useQuery } from "@tanstack/react-query";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { RouteProp } from "@react-navigation/native";
 import { Appbar, Button, List, Snackbar, Text } from "react-native-paper";
-import { listAlignments, scoreAlignment } from "../services/api";
-import { extractDetail } from "../services/apiClient";
+import { listAlignments } from "../services/api";
 import { RadialScore } from "../components/RadialScore";
 import { RiskBadge } from "../components/RiskBadge";
 import { usePipelineStore } from "../store/usePipelineStore";
@@ -16,17 +15,14 @@ import { CoachAppBarTheme, CoachColors, CoachRadii, CoachShadow } from "../theme
 type Nav = NativeStackNavigationProp<AnalyzeParamList>;
 type R = RouteProp<AnalyzeParamList, "AlignmentResult">;
 
+
 export function AlignmentResultScreen() {
   const navigation = useNavigation<Nav>();
   const route = useRoute<R>();
-  const qc = useQueryClient();
-  const cvId = usePipelineStore((s) => s.cvId);
-  const profileId = usePipelineStore((s) => s.profileId);
   const companyName = usePipelineStore((s) => s.companyName);
   const positionTitle = usePipelineStore((s) => s.positionTitle);
   const alignment = usePipelineStore((s) => s.alignment);
   const alignmentId = usePipelineStore((s) => s.alignmentId);
-  const setAlignment = usePipelineStore((s) => s.setAlignment);
   const [snack, setSnack] = useState<string | null>(null);
 
   const resultId = route.params?.resultId;
@@ -42,16 +38,6 @@ export function AlignmentResultScreen() {
     return (listQuery.data?.items ?? []).find((x) => x.id === resultId) ?? null;
   }, [listQuery.data, resultId]);
 
-  const mutation = useMutation({
-    mutationFn: scoreAlignment,
-    onSuccess: (res) => {
-      setAlignment(res.result_id, res);
-      qc.invalidateQueries({ queryKey: ["dashboard"] });
-      qc.invalidateQueries({ queryKey: ["alignment-list"] });
-    },
-    onError: (e) => setSnack(extractDetail(e)),
-  });
-
   useEffect(() => {
     if (!resultId || !listItem) return;
     usePipelineStore.getState().hydrateFromApplication({
@@ -63,19 +49,14 @@ export function AlignmentResultScreen() {
     });
   }, [resultId, listItem]);
 
-  useEffect(() => {
-    if (resultId) return;
-    if (!cvId || !profileId) return;
-    if (alignment) return;
-    mutation.mutate({ cv_id: cvId, profile_id: profileId });
-  }, [alignment, cvId, mutation, profileId, resultId]);
-
   const payload = alignment;
   const score = payload?.score_percent ?? listItem?.score ?? 0;
   const risk = payload?.risk_level ?? listItem?.risk_level ?? "";
   const titleCompany = payload?.company_name ?? listItem?.company_name ?? companyName ?? "";
   const titlePos = payload?.position ?? listItem?.target_position ?? positionTitle ?? "";
   const effectiveAlignmentId = alignmentId ?? resultId ?? "";
+
+  const isLoading = !payload && resultId && listQuery.isLoading;
 
   const cardBase = {
     backgroundColor: CoachColors.surfaceContainerLowest,
@@ -84,6 +65,23 @@ export function AlignmentResultScreen() {
     borderColor: CoachColors.outlineVariant,
     ...CoachShadow.card,
   } as const;
+
+  if (isLoading) {
+    return (
+      <View style={{ flex: 1, backgroundColor: CoachColors.background }}>
+        <Appbar.Header elevated style={{ backgroundColor: CoachColors.componentSurface }} theme={CoachAppBarTheme}>
+          <Appbar.BackAction onPress={() => navigation.goBack()} />
+          <Appbar.Content title="Hizalama sonucu" titleStyle={{ fontWeight: "700", color: CoachColors.onComponentSurface }} />
+        </Appbar.Header>
+        <View style={{ flex: 1, justifyContent: "center", alignItems: "center", padding: 32 }}>
+          <ActivityIndicator size="large" color={CoachColors.secondary} />
+          <Text style={{ fontSize: 15, color: CoachColors.onSurfaceVariant, textAlign: "center", marginTop: 16 }}>
+            Sonuçlar yükleniyor…
+          </Text>
+        </View>
+      </View>
+    );
+  }
 
   return (
     <View style={{ flex: 1, backgroundColor: CoachColors.background }}>
@@ -99,27 +97,23 @@ export function AlignmentResultScreen() {
           Analiz tamamlandı. Rol ile uyumunuz aşağıda.
         </Text>
 
-        {!payload && resultId && listQuery.isLoading ? (
-          <Text style={{ textAlign: "center", color: CoachColors.onSurfaceVariant }}>Yükleniyor…</Text>
-        ) : (
-          <View style={{ ...cardBase, padding: 20, alignItems: "center", position: "relative" }}>
-            <View style={{ position: "absolute", top: 14, right: 14, zIndex: 2 }}>
-              <RiskBadge level={risk} />
-            </View>
-            <Text style={{ fontSize: 18, fontWeight: "700", color: CoachColors.primary, textAlign: "center", marginTop: 8 }}>
-              {titleCompany}
-            </Text>
-            <Text style={{ fontSize: 15, color: CoachColors.onSurfaceVariant, textAlign: "center", marginTop: 4 }}>
-              {titlePos}
-            </Text>
-            <View style={{ marginTop: 16, marginBottom: 8 }}>
-              <RadialScore percent={Number(score) || 0} color={CoachColors.successGreen} />
-            </View>
-            <Text style={{ fontSize: 13, color: CoachColors.onSurfaceVariant, textAlign: "center", maxWidth: 280 }}>
-              Match skoru; risk seviyesi rozetinde özetlenir.
-            </Text>
+        <View style={{ ...cardBase, padding: 20, alignItems: "center", position: "relative" }}>
+          <View style={{ position: "absolute", top: 14, right: 14, zIndex: 2 }}>
+            <RiskBadge level={risk} />
           </View>
-        )}
+          <Text style={{ fontSize: 18, fontWeight: "700", color: CoachColors.primary, textAlign: "center", marginTop: 8 }}>
+            {titleCompany}
+          </Text>
+          <Text style={{ fontSize: 15, color: CoachColors.onSurfaceVariant, textAlign: "center", marginTop: 4 }}>
+            {titlePos}
+          </Text>
+          <View style={{ marginTop: 16, marginBottom: 8 }}>
+            <RadialScore percent={Number(score) || 0} color={CoachColors.successGreen} />
+          </View>
+          <Text style={{ fontSize: 13, color: CoachColors.onSurfaceVariant, textAlign: "center", maxWidth: 280 }}>
+            Match skoru; risk seviyesi rozetinde özetlenir.
+          </Text>
+        </View>
 
         {payload?.advice ? (
           <View style={{ ...cardBase, padding: 18, marginTop: 16 }}>

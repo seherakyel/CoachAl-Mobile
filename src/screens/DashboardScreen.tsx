@@ -16,6 +16,7 @@ import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityI
 import { getDashboardSummary, listAlignments } from "../services/api";
 import { CoachHeader } from "../components/chrome/CoachHeader";
 import { usePipelineStore } from "../store/usePipelineStore";
+import { useAnalysisJobStore, type AnalysisJob } from "../store/useAnalysisJobStore";
 import type { MainTabParamList, AnalyzeParamList } from "../app/navigationTypes";
 import { CoachColors, CoachRadii, CoachShadow } from "../theme/coachTheme";
 import { useAuthStore } from "../store/useAuthStore";
@@ -220,6 +221,8 @@ export function DashboardScreen() {
             </Pressable>
           </View>
 
+          <ActiveJobsBanner navigation={navigation} />
+
           <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
             <Text style={{ fontSize: 20, fontWeight: "600", color: CoachColors.primary }}>Son analizler</Text>
             <Pressable onPress={() => navigation.navigate("CvAnalysis", { screen: "CvAnalysisHome" })}>
@@ -359,5 +362,102 @@ export function DashboardScreen() {
         </ScrollView>
       )}
     </View>
+  );
+}
+
+function ActiveJobsBanner({ navigation }: { navigation: DashNav }) {
+  const jobs = useAnalysisJobStore((s) => s.jobs);
+  const removeJob = useAnalysisJobStore((s) => s.removeJob);
+
+  if (jobs.length === 0) return null;
+
+  return (
+    <View style={{ gap: 10, marginBottom: 20 }}>
+      {jobs.map((job) => (
+        <JobCard key={job.id} job={job} navigation={navigation} onDismiss={() => removeJob(job.id)} />
+      ))}
+    </View>
+  );
+}
+
+function JobCard({ job, navigation, onDismiss }: { job: AnalysisJob; navigation: DashNav; onDismiss: () => void }) {
+  const isRunning = job.status === "running" || job.status === "pending";
+  const isDone = job.status === "done";
+  const isErr = job.status === "error";
+
+  const bgColor = isRunning
+    ? "#FEF9C3"
+    : isDone
+      ? CoachColors.emerald50
+      : CoachColors.errorContainer;
+
+  const borderColor = isRunning
+    ? "#F59E0B"
+    : isDone
+      ? CoachColors.emerald200
+      : "rgba(186,26,26,0.3)";
+
+  const statusText = isRunning
+    ? "Analiz işleniyor…"
+    : isDone
+      ? "Analiz tamamlandı"
+      : "Analiz başarısız";
+
+  const handlePress = () => {
+    if (!isDone || !job.result) return;
+    usePipelineStore.getState().setAlignment(job.result.result_id, job.result);
+    usePipelineStore.getState().hydrateFromApplication({
+      cvId: job.cvId,
+      profileId: job.profileId,
+      alignmentId: job.result.result_id,
+      companyName: job.companyName,
+      positionTitle: job.positionTitle,
+    });
+    onDismiss();
+    navigation.navigate("CvAnalysis", {
+      screen: "AlignmentResult",
+      params: { resultId: job.result.result_id },
+    });
+  };
+
+  return (
+    <Pressable
+      onPress={isDone ? handlePress : undefined}
+      style={{
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 12,
+        padding: 14,
+        borderRadius: CoachRadii.xl,
+        backgroundColor: bgColor,
+        borderWidth: 1,
+        borderColor: borderColor,
+      }}
+    >
+      {isRunning ? (
+        <ActivityIndicator size="small" color="#D97706" />
+      ) : (
+        <MaterialCommunityIcons
+          name={isDone ? "check-circle" : "alert-circle"}
+          size={22}
+          color={isDone ? CoachColors.emerald600 : "#B91C1C"}
+        />
+      )}
+      <View style={{ flex: 1 }}>
+        <Text style={{ fontSize: 14, fontWeight: "600", color: CoachColors.onSurface }}>
+          {job.companyName} — {job.positionTitle}
+        </Text>
+        <Text style={{ fontSize: 13, color: CoachColors.onSurfaceVariant, marginTop: 2 }}>
+          {isErr ? job.error : statusText}
+        </Text>
+      </View>
+      {isDone ? (
+        <Text style={{ fontSize: 12, fontWeight: "600", color: CoachColors.emerald600 }}>Görüntüle →</Text>
+      ) : isErr ? (
+        <Pressable onPress={onDismiss} hitSlop={8}>
+          <MaterialCommunityIcons name="close" size={18} color={CoachColors.onSurfaceVariant} />
+        </Pressable>
+      ) : null}
+    </Pressable>
   );
 }
