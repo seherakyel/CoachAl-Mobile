@@ -14,6 +14,7 @@ import {
   updatePassword,
   updateProfile,
 } from "firebase/auth";
+import { getEmbeddedFirebaseOptions } from "../config/embeddedFirebaseOptions";
 import { publicApi } from "./publicApi";
 
 let appRef: FirebaseApp | null = null;
@@ -66,9 +67,23 @@ export async function fetchFirebaseOptions(): Promise<FirebaseOptions> {
   return res.data;
 }
 
+async function resolveFirebaseOptions(): Promise<FirebaseOptions> {
+  try {
+    return await fetchFirebaseOptions();
+  } catch (e) {
+    if (__DEV__) {
+      console.warn(
+        "[Firebase] Backend /config/firebase alinamadi, gomulu istemci yapilandirmasi kullaniliyor.",
+        e,
+      );
+    }
+    return getEmbeddedFirebaseOptions();
+  }
+}
+
 export async function initFirebaseFromRemote(): Promise<Auth> {
   if (authRef) return authRef;
-  const options = await fetchFirebaseOptions();
+  const options = await resolveFirebaseOptions();
   if (getApps().length === 0) {
     appRef = initializeApp(options);
   } else {
