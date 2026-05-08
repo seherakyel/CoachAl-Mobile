@@ -1,4 +1,6 @@
+import { getApiBaseUrl } from "../config/env";
 import { api } from "./apiClient";
+import { getIdToken } from "./firebaseAuth";
 
 export type HealthResponse = {
   status: string;
@@ -201,12 +203,54 @@ export async function getHealth(): Promise<HealthResponse> {
   return res.data;
 }
 
+/** Android'de axios + multipart sık ERR_NETWORK verir; fetch RN ile daha güvenilir. */
+const CV_UPLOAD_TIMEOUT_MS = 600_000;
+
 export async function uploadCvPdf(form: FormData): Promise<CvUploadResponse> {
-  const res = await api.post<CvUploadResponse>("/cv/upload", form, {
-    maxBodyLength: Infinity,
-    maxContentLength: Infinity,
-  });
-  return res.data;
+  const base = getApiBaseUrl().replace(/\/$/, "");
+  const token = await getIdToken();
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), CV_UPLOAD_TIMEOUT_MS);
+  try {
+    const headers: Record<string, string> = {};
+    if (token) headers.Authorization = `Bearer ${token}`;
+
+    const res = await fetch(`${base}/api/cv/upload`, {
+      method: "POST",
+      headers,
+      body: form,
+      signal: controller.signal,
+    });
+
+    const text = await res.text();
+    let data: unknown;
+    try {
+      data = text ? JSON.parse(text) : null;
+    } catch {
+      data = null;
+    }
+
+    if (!res.ok) {
+      const detail = parseFastApiDetail(data, text, res.status);
+      throw new Error(detail);
+    }
+
+    if (!data || typeof data !== "object") {
+      throw new Error("Geçersiz sunucu yanıtı");
+    }
+    return data as CvUploadResponse;
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
+function parseFastApiDetail(data: unknown, rawText: string, status: number): string {
+  if (data && typeof data === "object" && "detail" in data) {
+    const d = (data as { detail: unknown }).detail;
+    if (typeof d === "string") return d;
+    if (Array.isArray(d)) return d.map((x) => String(x)).join("\n");
+  }
+  return rawText.trim() || `HTTP ${status}`;
 }
 
 export async function analyzeCompany(body: CompanyAnalyzeBody): Promise<CompanyAnalyzeResponse> {

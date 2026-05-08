@@ -1,6 +1,12 @@
 apply plugin: "com.android.application"
 apply plugin: "org.jetbrains.kotlin.android"
 apply plugin: "com.facebook.react"
+
+// react-native-config: debug → repo kökündeki .env.local (yol app/../ ile köke çıkar)
+project.ext.envConfigFiles = [
+    debug: "../.env.local",
+]
+
 apply from: file("../../node_modules/react-native-config/android/dotenv.gradle")
 apply from: file("../../node_modules/react-native-vector-icons/fonts.gradle")
 
