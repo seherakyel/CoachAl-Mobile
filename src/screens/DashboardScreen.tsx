@@ -271,9 +271,9 @@ export function DashboardScreen() {
                 const strong = score >= 80;
                 const openDetail = () => {
                   if (a.alignment_id) {
-                    navigation.navigate("CvAnalysis", {
-                      screen: "AlignmentResult",
-                      params: { resultId: a.alignment_id },
+                    navigation.navigate("Reports", {
+                      screen: "FeedbackReport",
+                      params: { alignmentId: a.alignment_id, sessionId: null },
                     });
                   } else {
                     navigation.navigate("CvAnalysis", { screen: "CvAnalysisHome" });
@@ -381,7 +381,7 @@ function ActiveJobsBanner({ navigation }: { navigation: DashNav }) {
 }
 
 function JobCard({ job, navigation, onDismiss }: { job: AnalysisJob; navigation: DashNav; onDismiss: () => void }) {
-  const isRunning = job.status === "running" || job.status === "pending";
+  const isRunning = job.status === "running";
   const isDone = job.status === "done";
   const isErr = job.status === "error";
 
@@ -414,10 +414,17 @@ function JobCard({ job, navigation, onDismiss }: { job: AnalysisJob; navigation:
       positionTitle: job.positionTitle,
     });
     onDismiss();
-    navigation.navigate("CvAnalysis", {
-      screen: "AlignmentResult",
-      params: { resultId: job.result.result_id },
-    });
+    if (job.feedback) {
+      navigation.navigate("Reports", {
+        screen: "FeedbackReport",
+        params: { alignmentId: job.result.result_id, sessionId: null },
+      });
+    } else {
+      navigation.navigate("CvAnalysis", {
+        screen: "AlignmentResult",
+        params: { resultId: job.result.result_id },
+      });
+    }
   };
 
   return (
