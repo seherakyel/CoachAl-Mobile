@@ -53,13 +53,21 @@ ios/**/*.xcodeproj/xcuserdata/
 ios/**/*.xcodeproj/project.xcworkspace/xcuserdata/
 *.xcuserstate
 
+# Android — Gradle, NDK (.cxx), ve tüm modül derleme çıktıları (React Native)
 android/.gradle/
-android/app/build/
+android/**/.gradle/
 android/build/
-android/local.properties
+android/**/build/
+android/**/.cxx/
 android/.cxx/
-android/app/.cxx/
+externalNativeBuild/
+android/**/.externalNativeBuild/
+.android/
+android/app/release/
+android/captures/
+android/local.properties
 android/*.hprof
+
 *.apk
 *.aab
 *.ap_
