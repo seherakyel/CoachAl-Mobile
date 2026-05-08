@@ -32,7 +32,7 @@ export function extractDetail(error: unknown): string {
       (typeof ax.message === "string" && ax.message.toLowerCase().includes("network")))
   ) {
     const base = getApiBaseUrl();
-    return `Sunucuya ulaşılamadı (${base}). Backend'i şöyle dinletin: uvicorn ... --host 0.0.0.0 --port 8000. Hâlâ olmazsa: npm run adb:reverse, .env: ANDROID_USE_DEVICE_LOCALHOST=true ve API_BASE_URL=http://127.0.0.1:8000, sonra yeniden derleme.`;
+    return `Sunucuya ulaşılamadı (${base}). Backend: uvicorn ... --host 0.0.0.0 --port 8000. Android emülatör: önce emülatörü açın, sonra proje kökünde \`npm run adb:reverse\` veya doğrudan \`npm run android\` (reverse otomatik). Ardından uygulamayı yeniden yükleyin.`;
   }
   const d = ax.response?.data?.detail;
   if (Array.isArray(d)) return d.map((x) => String(x)).join("\n");

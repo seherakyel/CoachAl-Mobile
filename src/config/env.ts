@@ -3,8 +3,9 @@ import { Platform } from "react-native";
 
 const PRODUCTION_API_BASE = "https://api.coachai.com";
 
+/** Geliştirme: iOS Simülatör ve Android emülatör (adb reverse ile) için host makine. Gerçek telefonda API_BASE_URL ile LAN IP verin. */
 function devApiBase(): string {
-  return Platform.OS === "android" ? "http://10.0.2.2:8000" : "http://127.0.0.1:8000";
+  return "http://127.0.0.1:8000";
 }
 
 /** axios zaten `/api` ekler; `.env`'de sonda `/api` yazılırsa çift `/api/api` olur. */
@@ -16,21 +17,11 @@ function stripDuplicateApiPath(url: string): string {
   return u;
 }
 
-/**
- * Android emülatörde `localhost` / `127.0.0.1` varsayılan olarak emülatörün kendisidir.
- * Host makineye gitmek için genelde `10.0.2.2` kullanılır.
- * `10.0.0.2` yaygın bir yazım hatasıdır (doğru: `10.0.2.2`).
- * `adb reverse tcp:PORT tcp:PORT` kullanıyorsanız `.env` içinde ANDROID_USE_DEVICE_LOCALHOST=true
- * ve API_BASE_URL=http://127.0.0.1:PORT bırakın (127.0.0.1'i 10.0.2.2'ye çevirmeyiz).
- */
+/** Android: yaygın IP yazım hatası; localhost → 127.0.0.1 (adb reverse ile uyumlu). */
 function normalizeApiBaseForAndroid(url: string): string {
   if (Platform.OS !== "android") return url;
   let u = url.replace(/10\.0\.0\.2/gi, "10.0.2.2");
-  const keepLocalhost = (Config.ANDROID_USE_DEVICE_LOCALHOST ?? "").trim().toLowerCase() === "true";
-  if (keepLocalhost) return u;
-  return u
-    .replace(/127\.0\.0\.1/gi, "10.0.2.2")
-    .replace(/localhost/gi, "10.0.2.2");
+  return u.replace(/localhost/gi, "127.0.0.1");
 }
 
 export function getApiBaseUrl(): string {
