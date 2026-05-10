@@ -11,7 +11,6 @@ export type TriggerVariant =
   | "strength"
   | "weakness"
   | "plan"
-  | "resources"
   | "time";
 
 type Props = {
@@ -76,13 +75,6 @@ function IconBox({ variant }: { variant: TriggerVariant }) {
     return (
       <View style={[styles.iconBox, styles.traitsIcon]}>
         <MaterialCommunityIcons name="clipboard-list-outline" size={22} color={AR.indigo600} />
-      </View>
-    );
-  }
-  if (variant === "resources") {
-    return (
-      <View style={[styles.iconBox, styles.traitsIcon]}>
-        <MaterialCommunityIcons name="book-open-variant" size={22} color={AR.indigo600} />
       </View>
     );
   }

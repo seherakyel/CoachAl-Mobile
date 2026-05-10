@@ -26,19 +26,12 @@ import { SkillsListModalBody } from "../components/analysis/SkillsListModalBody"
 type Nav = NativeStackNavigationProp<ReportsParamList>;
 type R = RouteProp<ReportsParamList, "FeedbackReport">;
 
-type FeedbackModalKind = "coach" | "traits" | "strengths" | "weaknesses" | "resources" | null;
+type FeedbackModalKind = "coach" | "traits" | "strengths" | "weaknesses" | null;
 
 function previewLine(text: string, max = 64): string {
   const t = text.replace(/\s+/g, " ").trim();
   if (!t) return "Detay için dokunun";
   return t.length <= max ? t : `${t.slice(0, max - 1)}…`;
-}
-
-function formatScore(score?: number | null): string {
-  if (score == null || Number.isNaN(Number(score))) return "—";
-  const n = Number(score);
-  if (Number.isInteger(n)) return String(n);
-  return String(n);
 }
 
 function FeedbackModalBody({
@@ -91,21 +84,6 @@ function FeedbackModalBody({
     const list = data.weaknesses ?? [];
     const rows = list.map((s) => ({ label: s, detail: "" }));
     return <SkillCardList variant="missing" rows={rows} />;
-  }
-  if (kind === "resources") {
-    const list = data.recommended_resources ?? [];
-    if (list.length === 0) {
-      return <Text style={styles.modalMuted}>Önerilen kaynak bulunmuyor.</Text>;
-    }
-    return (
-      <View style={styles.bulletBlock}>
-        {list.map((s, idx) => (
-          <Text key={`rs-${idx}`} style={styles.modalBullet}>
-            • {s}
-          </Text>
-        ))}
-      </View>
-    );
   }
   return null;
 }
@@ -174,9 +152,7 @@ export function FeedbackReportScreen() {
           ? "Eşleşen yetenekler"
           : modalKind === "weaknesses"
             ? "Eksik / geliştirilebilir"
-            : modalKind === "resources"
-              ? "Önerilen kaynaklar"
-              : "";
+            : "";
 
   if (mutation.isPending) {
     return (
@@ -224,27 +200,21 @@ export function FeedbackReportScreen() {
 
   const strengths = data.strengths ?? [];
   const weaknesses = data.weaknesses ?? [];
-  const resources = data.recommended_resources ?? [];
   const alignment = alignQuery.data;
 
-  const coachScore = Math.round(Number(alignment?.score_percent ?? data.score ?? 0)) || 0;
-  const coachPotential = computePotentialMatchScore(coachScore, alignment?.missing_skills_ui ?? []).potential;
+  const rawScore = Number(alignment?.score_percent ?? data.score ?? 0) || 0;
+  const scoreRounded = Math.round(rawScore);
+  const coachPotential = computePotentialMatchScore(scoreRounded, alignment?.missing_skills_ui ?? []).potential;
   const coachSubtitle =
-    coachPotential > coachScore ? `%${coachScore} · Hedef %${coachPotential}` : `%${coachScore} · Eşleşme`;
-
-  const summarySecondary = [
-    `Skor: %${formatScore(data.score)} · Risk: ${data.risk_level ?? "—"}`,
-    "",
-    "Aşağıdaki satırlara dokunarak rapor bölümlerini okuyabilirsiniz.",
-  ].join("\n");
+    coachPotential > scoreRounded ? `%${scoreRounded} · Hedef %${coachPotential}` : `%${scoreRounded} · Eşleşme`;
 
   const culturePrimary = alignment?.culture_summary?.trim();
   const companyName = alignment?.company_name?.trim() || data.company_name;
   const positionTitle = alignment?.position?.trim() || data.position;
   const cultureBody = culturePrimary
-    ? `${culturePrimary}\n\nSkor: %${formatScore(data.score)} · Risk: ${data.risk_level ?? "—"}`
-    : summarySecondary;
-  const cultureSectionTitle = culturePrimary ? "Kültür özeti" : "Skor ve risk";
+    ? culturePrimary
+    : "Aşağıdaki satırlara dokunarak rapor bölümlerini okuyabilirsiniz.";
+  const cultureSectionTitle = culturePrimary ? "Kültür özeti" : "";
 
   return (
     <View style={styles.flexFill}>
@@ -271,6 +241,11 @@ export function FeedbackReportScreen() {
           industry={storeIndustry ?? "Technology"}
           cultureBody={cultureBody}
           secondarySectionTitle={cultureSectionTitle}
+          matchScore={{
+            scorePercent: rawScore,
+            potentialPercent: coachPotential > scoreRounded ? coachPotential : null,
+            riskLabel: data.risk_level ?? null,
+          }}
         />
 
         <AnalysisSectionTriggerRow
@@ -310,12 +285,6 @@ export function FeedbackReportScreen() {
                 : "Liste boş olabilir"
           }
           onPress={() => openModal("weaknesses")}
-        />
-        <AnalysisSectionTriggerRow
-          variant="resources"
-          title="Önerilen kaynaklar"
-          subtitle={resources.length ? `${resources.length} kaynak` : "Kaynak önerisi yok"}
-          onPress={() => openModal("resources")}
         />
       </ScrollView>
 
@@ -397,19 +366,5 @@ const styles = StyleSheet.create({
     color: AR.slate900,
     textAlign: "center",
     marginBottom: 16,
-  },
-  modalMuted: {
-    fontSize: 14,
-    lineHeight: 21,
-    color: AR.slate500,
-  },
-  bulletBlock: {
-    gap: 10,
-  },
-  modalBullet: {
-    fontSize: 15,
-    lineHeight: 22,
-    color: AR.slate700,
-    letterSpacing: -0.15,
   },
 });
