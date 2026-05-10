@@ -8,6 +8,9 @@ type PipelineState = {
   companyName: string;
   positionTitle: string;
   cultureSummary: string | null;
+  /** Şirket analizi / GET alignment ile gelen aranan profil maddeleri (web key_traits). */
+  keyTraits: string[];
+  industry: string | null;
   alignmentId: string | null;
   alignment: AlignmentScoreResponse | null;
   setCv: (cvId: string | null, displayName?: string | null) => void;
@@ -16,8 +19,9 @@ type PipelineState = {
     companyName: string,
     positionTitle: string,
     cultureSummary?: string | null,
+    keyTraits?: string[] | null,
+    industry?: string | null,
   ) => void;
-  setAlignment: (alignmentId: string, payload: AlignmentScoreResponse) => void;
   resetFlow: () => void;
   hydrateFromApplication: (input: {
     cvId: string;
@@ -26,6 +30,7 @@ type PipelineState = {
     companyName: string;
     positionTitle: string;
   }) => void;
+  setAlignment: (alignmentId: string, payload: AlignmentScoreResponse) => void;
 };
 
 const initial = {
@@ -35,6 +40,8 @@ const initial = {
   companyName: "",
   positionTitle: "",
   cultureSummary: null as string | null,
+  keyTraits: [] as string[],
+  industry: null as string | null,
   alignmentId: null as string | null,
   alignment: null as AlignmentScoreResponse | null,
 };
@@ -46,7 +53,7 @@ export const usePipelineStore = create<PipelineState>((set) => ({
       cvId,
       cvDisplayName: cvId && displayName?.trim() ? displayName.trim() : "",
     }),
-  setCompany: (profileId, companyName, positionTitle, cultureSummary) =>
+  setCompany: (profileId, companyName, positionTitle, cultureSummary, keyTraits, industry) =>
     set({
       profileId,
       companyName,
@@ -55,6 +62,8 @@ export const usePipelineStore = create<PipelineState>((set) => ({
         cultureSummary != null && String(cultureSummary).trim().length > 0
           ? String(cultureSummary).trim()
           : null,
+      keyTraits: Array.isArray(keyTraits) ? keyTraits.map((t) => String(t).trim()).filter(Boolean) : [],
+      industry: industry != null && String(industry).trim() ? String(industry).trim() : null,
     }),
   setAlignment: (alignmentId, payload) => set({ alignmentId, alignment: payload }),
   resetFlow: () => set({ ...initial }),
@@ -67,6 +76,8 @@ export const usePipelineStore = create<PipelineState>((set) => ({
       companyName,
       positionTitle,
       cultureSummary: null,
+      keyTraits: [],
+      industry: null,
       alignment: null,
     }),
 }));

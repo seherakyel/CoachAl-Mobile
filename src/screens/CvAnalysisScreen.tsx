@@ -146,6 +146,8 @@ export function CvAnalysisScreen() {
         res.company_name,
         res.position,
         typeof res.culture_summary === "string" ? res.culture_summary : null,
+        Array.isArray(res.key_traits) ? res.key_traits.map((x) => String(x)) : [],
+        typeof res.industry === "string" ? res.industry : null,
       );
       qc.invalidateQueries({ queryKey: ["dashboard"] });
       startJob({

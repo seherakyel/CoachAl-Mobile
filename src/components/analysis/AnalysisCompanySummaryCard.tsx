@@ -6,6 +6,10 @@ type Props = {
   companyName: string;
   positionTitle: string;
   cultureBody: string;
+  /** Web `company-industry`; boşsa "Technology". */
+  industry?: string | null;
+  /** Pozisyon satırı: web'de "Hedef rol · …", raporda düz metin. */
+  positionLabelMode?: "hedefRol" | "plain";
   /** Alt bölüm başlığı (varsayılan: kültür özeti). AI raporu gibi ekranlarda “Skor ve risk” vb. */
   secondarySectionTitle?: string;
 };
@@ -46,10 +50,20 @@ export function AnalysisCompanySummaryCard({
   companyName,
   positionTitle,
   cultureBody,
+  industry,
+  positionLabelMode = "hedefRol",
   secondarySectionTitle = "Kültür özeti",
 }: Props) {
   const letter = (companyName.trim()[0] ?? "?").toUpperCase();
   const showTrendyol = isTrendyol(companyName);
+  const industryLine = (industry && industry.trim()) || "Technology";
+  const pos = positionTitle.trim();
+  const positionLine =
+    positionLabelMode === "plain"
+      ? pos || "Pozisyon bilgisi"
+      : pos
+        ? `Hedef rol · ${pos}`
+        : "Pozisyon bilgisi";
 
   return (
     <View style={cardSurface.wrap}>
@@ -61,7 +75,8 @@ export function AnalysisCompanySummaryCard({
           accessibilityLabel={`${companyName || "Şirket"}, ${positionTitle || "pozisyon"}`}
         >
           <Text style={[styles.h3, fontTight]}>{companyName || "—"}</Text>
-          <Text style={styles.sectorLine}>{positionTitle ? `${positionTitle}` : "Pozisyon bilgisi"}</Text>
+          <Text style={styles.industryLine}>{industryLine}</Text>
+          <Text style={styles.sectorLine}>{positionLine}</Text>
         </View>
       </View>
       <Text style={[styles.kicker, styles.kickerSpaced]}>{secondarySectionTitle}</Text>
@@ -154,8 +169,14 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: AR.slate900,
   },
+  industryLine: {
+    marginTop: 4,
+    fontSize: 12,
+    fontWeight: "500",
+    color: AR.slate500,
+  },
   sectorLine: {
-    marginTop: 6,
+    marginTop: 8,
     fontSize: 14,
     color: AR.slate500,
     letterSpacing: -0.15,

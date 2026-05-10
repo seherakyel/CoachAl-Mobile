@@ -6,7 +6,9 @@ import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { RouteProp } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
-import { listAlignments } from "../services/api";
+import { getAlignmentById, listAlignments } from "../services/api";
+import { computePotentialMatchScore } from "../analysis/growthPotential";
+import { extendKeyTraits } from "../analysis/analysisKeyTraits";
 import { usePipelineStore } from "../store/usePipelineStore";
 import type { AnalyzeParamList } from "../app/navigationTypes";
 import { AR, fontTight } from "../components/analysis/analysisResultTokens";
@@ -137,9 +139,12 @@ export function AlignmentResultScreen() {
   const companyName = usePipelineStore((s) => s.companyName);
   const positionTitle = usePipelineStore((s) => s.positionTitle);
   const cultureSummary = usePipelineStore((s) => s.cultureSummary);
+  const keyTraits = usePipelineStore((s) => s.keyTraits);
+  const industry = usePipelineStore((s) => s.industry);
   const alignment = usePipelineStore((s) => s.alignment);
   const alignmentId = usePipelineStore((s) => s.alignmentId);
   const resultId = route.params?.resultId;
+  const storeMatchesResult = !!resultId && alignment?.result_id === resultId;
   const [modalOpen, setModalOpen] = useState(false);
   const [modalKind, setModalKind] = useState<ActiveModal>(null);
 
@@ -150,10 +155,16 @@ export function AlignmentResultScreen() {
     return () => clearTimeout(t);
   }, [modalOpen, modalKind]);
 
+  const detailQuery = useQuery({
+    queryKey: ["alignment-detail", resultId],
+    queryFn: () => getAlignmentById(resultId!),
+    enabled: !!resultId,
+  });
+
   const listQuery = useQuery({
     queryKey: ["alignment-list"],
     queryFn: () => listAlignments(50),
-    enabled: !!resultId && alignment?.result_id !== resultId,
+    enabled: !!resultId && !storeMatchesResult,
   });
 
   const listItem = useMemo(() => {
@@ -172,34 +183,48 @@ export function AlignmentResultScreen() {
     });
   }, [resultId, listItem]);
 
-  const payload = alignment;
+  useEffect(() => {
+    const d = detailQuery.data;
+    if (!resultId || !d || d.result_id !== resultId) return;
+    usePipelineStore.getState().setAlignment(resultId, d);
+  }, [detailQuery.data, resultId]);
+
+  const payload = useMemo(() => {
+    if (!resultId) return alignment;
+    const d = detailQuery.data;
+    if (d?.result_id === resultId) return d;
+    if (alignment?.result_id === resultId) return alignment;
+    return null;
+  }, [resultId, detailQuery.data, alignment]);
+
   const scoreNum = Math.round(Number(payload?.score_percent ?? listItem?.score ?? 0)) || 0;
   const titleCompany = payload?.company_name ?? listItem?.company_name ?? companyName ?? "";
   const titlePos = payload?.position ?? listItem?.target_position ?? positionTitle ?? "";
   const effectiveAlignmentId = alignmentId ?? resultId ?? "";
-  const targetPct = scoreNum >= 90 ? 100 : 90;
+  const missingUi = payload?.missing_skills_ui ?? [];
+  const { potential: coachPotential } = computePotentialMatchScore(scoreNum, missingUi);
+  const coachSubtitle =
+    coachPotential > scoreNum ? `%${scoreNum} · Hedef %${coachPotential}` : `%${scoreNum} · Eşleşme`;
 
-  const profileChips = useMemo(() => {
-    const m = payload?.matched_skills;
-    const x = payload?.missing_skills;
-    const chips: string[] = [];
-    if (Array.isArray(m)) chips.push(...m.map(String));
-    if (Array.isArray(x)) chips.push(...x.map(String));
-    const uniq = [...new Set(chips.map((s) => s.trim()).filter(Boolean))];
-    if (uniq.length > 0) return uniq.slice(0, 16);
-    const steps = payload?.next_steps;
-    if (Array.isArray(steps)) return steps.map(String).slice(0, 16);
-    return [];
-  }, [payload]);
+  const profileChips = useMemo(
+    () => extendKeyTraits(payload?.key_traits ?? keyTraits),
+    [payload?.key_traits, keyTraits],
+  );
 
   const matchedUi = payload?.matched_skills_ui ?? [];
-  const missingUi = payload?.missing_skills_ui ?? [];
 
   const cultureBody =
+    payload?.culture_summary?.trim() ||
     cultureSummary?.trim() ||
     "Bu kayıt için şirket kültürü özeti henüz bağlı değil. Yeni bir analiz akışı tamamladığınızda burada görünür.";
 
-  const isLoading = !payload && resultId && listQuery.isLoading;
+  const isLoading =
+    !!resultId &&
+    !payload &&
+    !detailQuery.isError &&
+    (detailQuery.isPending || (!storeMatchesResult && listQuery.isPending));
+
+  const showDetailError = !!resultId && detailQuery.isError && !payload;
 
   const modalTitle =
     modalKind === "coach"
@@ -214,6 +239,25 @@ export function AlignmentResultScreen() {
 
   if (isLoading) {
     return <SkelScreen onBack={() => navigation.goBack()} />;
+  }
+
+  if (showDetailError) {
+    return (
+      <View style={[styles.screen, { paddingTop: insets.top + 24, paddingHorizontal: 20 }]}>
+        <Pressable
+          onPress={() => navigation.goBack()}
+          android_ripple={{ color: "rgba(15,23,42,0.08)" }}
+          style={({ pressed }) => [styles.backBtn, pressed && styles.pressed]}
+          hitSlop={12}
+        >
+          <MaterialCommunityIcons name="arrow-left" size={22} color={AR.slate700} />
+        </Pressable>
+        <Text style={[styles.h1, fontTight, { marginTop: 24 }]}>Sonuç yüklenemedi</Text>
+        <Text style={[styles.subtitle, { marginTop: 12 }]}>
+          Bu hizalama kaydına erişilemedi veya bulunamadı. Listeden tekrar deneyin.
+        </Text>
+      </View>
+    );
   }
 
   return (
@@ -244,13 +288,14 @@ export function AlignmentResultScreen() {
         <AnalysisCompanySummaryCard
           companyName={titleCompany}
           positionTitle={titlePos}
+          industry={industry ?? "Technology"}
           cultureBody={cultureBody}
         />
 
         <AnalysisSectionTriggerRow
           variant="coach"
           title="CoachAI tavsiyesi"
-          subtitle={`%${scoreNum} · Hedef %${targetPct}`}
+          subtitle={coachSubtitle}
           onPress={() => {
             setModalKind("coach");
             setModalOpen(true);
@@ -291,15 +336,6 @@ export function AlignmentResultScreen() {
             setModalOpen(true);
           }}
         />
-
-        {resultId && !payload ? (
-          <View style={styles.card}>
-            <Text style={styles.bodyText}>
-              Tam analiz içeriği cihazda yok. Özet skorunu görüntülüyorsunuz; tüm bölümler için analizi uygulamadan
-              yeniden çalıştırın.
-            </Text>
-          </View>
-        ) : null}
 
         <Pressable
           onPress={() =>
@@ -342,8 +378,11 @@ export function AlignmentResultScreen() {
           <CoachAdviceModalBody
             visible={modalOpen && modalKind === "coach"}
             scorePercent={scoreNum}
-            targetPct={targetPct}
             advice={payload?.advice}
+            missingSkillsUi={missingUi}
+            S={payload?.S}
+            E={payload?.E}
+            D={payload?.D}
           />
         ) : null}
         {modalKind === "traits" ? <KeyTraitsModalBody chips={profileChips} /> : null}

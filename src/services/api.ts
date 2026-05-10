@@ -34,6 +34,7 @@ export type CompanyAnalyzeResponse = {
   interview_process?: unknown;
   common_questions?: unknown;
   key_traits?: unknown;
+  industry?: string;
 };
 
 export type AlignmentScoreBody = {
@@ -66,7 +67,13 @@ export type AlignmentScoreResponse = {
   required_skills_used?: unknown;
   matched_skills?: string[];
   missing_skills?: string[];
+  /** GET /alignment/{id} ve şirket profili senkronunda gelir; POST /score yanıtında olmayabilir. */
+  culture_summary?: string;
+  key_traits?: unknown[];
 };
+
+/** GET /alignment/{id} — şirket profili alanları `AlignmentScoreResponse` üzerinde opsiyonel. */
+export type AlignmentDetailResponse = AlignmentScoreResponse;
 
 export type AlignmentListItem = {
   id: string;
@@ -322,6 +329,11 @@ export async function listAlignments(limit = 20): Promise<{ items: AlignmentList
   const res = await api.get<{ items: AlignmentListItem[]; total: number }>("/alignment/list", {
     params: { limit },
   });
+  return res.data;
+}
+
+export async function getAlignmentById(alignmentId: string): Promise<AlignmentDetailResponse> {
+  const res = await api.get<AlignmentDetailResponse>(`/alignment/${alignmentId}`);
   return res.data;
 }
 
