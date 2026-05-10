@@ -15,13 +15,14 @@ import { CoachAppBarTheme, CoachColors } from "../theme/coachTheme";
 import { AR } from "../components/analysis/analysisResultTokens";
 import { AnalysisCompanySummaryCard } from "../components/analysis/AnalysisCompanySummaryCard";
 import { AnalysisSectionTriggerRow } from "../components/analysis/AnalysisSectionTriggerRow";
-import { AnalysisBottomModal } from "../components/analysis/AnalysisBottomModal";
+import { AnalysisCenterModal } from "../components/analysis/AnalysisCenterModal";
+import { CoachAdviceModalBody } from "../components/analysis/CoachAdviceModalBody";
 import { SkillCardList } from "../components/analysis/SkillCardList";
 
 type Nav = NativeStackNavigationProp<ReportsParamList>;
 type R = RouteProp<ReportsParamList, "FeedbackReport">;
 
-type FeedbackModalKind = "eliminated" | "strengths" | "weaknesses" | "resources" | null;
+type FeedbackModalKind = "coach" | "strengths" | "weaknesses" | "resources" | null;
 
 function previewLine(text: string, max = 64): string {
   const t = text.replace(/\s+/g, " ").trim();
@@ -36,13 +37,28 @@ function formatScore(score?: number | null): string {
   return String(n);
 }
 
-function FeedbackModalBody({ kind, data }: { kind: FeedbackModalKind; data: FeedbackResponse }) {
-  if (kind === "eliminated") {
-    const body = (data.why_can_be_eliminated ?? "").trim();
-    return body ? (
-      <Text style={styles.modalParagraph}>{body}</Text>
-    ) : (
-      <Text style={styles.modalMuted}>Bu bölüm için metin dönmedi.</Text>
+function FeedbackModalBody({
+  kind,
+  data,
+  modalOpen,
+}: {
+  kind: FeedbackModalKind;
+  data: FeedbackResponse;
+  modalOpen: boolean;
+}) {
+  const scoreRaw = Number(data.score ?? 0) || 0;
+  const scoreRounded = Math.round(scoreRaw);
+  const targetPct = scoreRounded >= 90 ? 100 : 90;
+  const adviceText = (data.why_can_be_eliminated ?? "").trim();
+
+  if (kind === "coach") {
+    return (
+      <CoachAdviceModalBody
+        visible={modalOpen}
+        scorePercent={scoreRaw}
+        targetPct={targetPct}
+        advice={adviceText || null}
+      />
     );
   }
   if (kind === "strengths") {
@@ -117,8 +133,8 @@ export function FeedbackReportScreen() {
   };
 
   const modalTitle =
-    modalKind === "eliminated"
-      ? "Neden elenebilirsin?"
+    modalKind === "coach"
+      ? "CoachAI tavsiyesi"
       : modalKind === "strengths"
         ? "Eşleşen yetenekler"
         : modalKind === "weaknesses"
@@ -174,12 +190,15 @@ export function FeedbackReportScreen() {
   const strengths = data.strengths ?? [];
   const weaknesses = data.weaknesses ?? [];
   const resources = data.recommended_resources ?? [];
-  const why = (data.why_can_be_eliminated ?? "").trim();
+  const scoreRaw = Number(data.score ?? 0) || 0;
+  const scoreRounded = Math.round(scoreRaw);
+  const targetPct = scoreRounded >= 90 ? 100 : 90;
+  const coachSubtitle = `%${formatScore(data.score)} · Hedef %${targetPct}`;
 
   const summarySecondary = [
     `Skor: %${formatScore(data.score)} · Risk: ${data.risk_level ?? "—"}`,
     "",
-    "Aşağıdaki satırlara dokunarak rapor bölümlerini tam ekran okuyabilirsiniz.",
+    "Aşağıdaki satırlara dokunarak rapor bölümlerini okuyabilirsiniz.",
   ].join("\n");
 
   return (
@@ -197,7 +216,7 @@ export function FeedbackReportScreen() {
       >
         <View style={styles.pageIntro}>
           <Text style={styles.pageTitle}>AI geri bildirim raporu</Text>
-          <Text style={styles.pageSubtitle}>Özet üstte; uzun metinler modallarda kaydırılarak okunur.</Text>
+          <Text style={styles.pageSubtitle}>Özet üstte; detaylar ortada açılan pencerede kaydırılarak okunur.</Text>
         </View>
 
         <AnalysisCompanySummaryCard
@@ -208,10 +227,10 @@ export function FeedbackReportScreen() {
         />
 
         <AnalysisSectionTriggerRow
-          variant="risk"
-          title="Neden elenebilirsin?"
-          subtitle={previewLine(why)}
-          onPress={() => openModal("eliminated")}
+          variant="coach"
+          title="CoachAI tavsiyesi"
+          subtitle={coachSubtitle}
+          onPress={() => openModal("coach")}
         />
         <AnalysisSectionTriggerRow
           variant="strength"
@@ -235,14 +254,14 @@ export function FeedbackReportScreen() {
         />
       </ScrollView>
 
-      <AnalysisBottomModal
+      <AnalysisCenterModal
         visible={modalOpen}
         title={modalTitle}
         onClose={() => setModalOpen(false)}
         onDismiss={() => setModalKind(null)}
       >
-        {modalKind ? <FeedbackModalBody kind={modalKind} data={data} /> : null}
-      </AnalysisBottomModal>
+        {modalKind ? <FeedbackModalBody kind={modalKind} data={data} modalOpen={modalOpen} /> : null}
+      </AnalysisCenterModal>
 
       <Snackbar visible={!!snack} onDismiss={() => setSnack(null)} duration={7000}>
         {snack ?? ""}
@@ -305,12 +324,6 @@ const styles = StyleSheet.create({
     color: AR.slate900,
     textAlign: "center",
     marginBottom: 16,
-  },
-  modalParagraph: {
-    fontSize: 15,
-    lineHeight: 24,
-    color: AR.slate700,
-    letterSpacing: -0.2,
   },
   modalMuted: {
     fontSize: 14,

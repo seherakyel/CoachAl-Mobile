@@ -12,7 +12,7 @@ import type { AnalyzeParamList } from "../app/navigationTypes";
 import { AR, fontTight } from "../components/analysis/analysisResultTokens";
 import { AnalysisCompanySummaryCard } from "../components/analysis/AnalysisCompanySummaryCard";
 import { AnalysisSectionTriggerRow } from "../components/analysis/AnalysisSectionTriggerRow";
-import { AnalysisBottomModal } from "../components/analysis/AnalysisBottomModal";
+import { AnalysisCenterModal } from "../components/analysis/AnalysisCenterModal";
 import { CoachAdviceModalBody } from "../components/analysis/CoachAdviceModalBody";
 import { KeyTraitsModalBody } from "../components/analysis/KeyTraitsModalBody";
 import { SkillsListModalBody } from "../components/analysis/SkillsListModalBody";
@@ -332,7 +332,7 @@ export function AlignmentResultScreen() {
         </Pressable>
       </View>
 
-      <AnalysisBottomModal
+      <AnalysisCenterModal
         visible={modalOpen}
         title={modalTitle}
         onClose={() => setModalOpen(false)}
@@ -341,7 +341,7 @@ export function AlignmentResultScreen() {
         {modalKind === "coach" ? (
           <CoachAdviceModalBody
             visible={modalOpen && modalKind === "coach"}
-            scoreNum={scoreNum}
+            scorePercent={scoreNum}
             targetPct={targetPct}
             advice={payload?.advice}
           />
@@ -349,7 +349,7 @@ export function AlignmentResultScreen() {
         {modalKind === "traits" ? <KeyTraitsModalBody chips={profileChips} /> : null}
         {modalKind === "matched" ? <SkillsListModalBody variant="matched" items={matchedUi} /> : null}
         {modalKind === "missing" ? <SkillsListModalBody variant="missing" items={missingUi} /> : null}
-      </AnalysisBottomModal>
+      </AnalysisCenterModal>
     </View>
   );
 }

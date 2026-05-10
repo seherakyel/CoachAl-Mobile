@@ -61,7 +61,7 @@ function IconBox({ variant }: { variant: TriggerVariant }) {
   if (variant === "strength") {
     return (
       <View style={[styles.iconBox, styles.matchedIcon]}>
-        <MaterialCommunityIcons name="thumb-up-outline" size={22} color={AR.indigo600} />
+        <MaterialCommunityIcons name="check-circle-outline" size={22} color={AR.indigo600} />
       </View>
     );
   }

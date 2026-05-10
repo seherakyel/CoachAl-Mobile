@@ -5,13 +5,21 @@ import { AR, fontTight } from "./analysisResultTokens";
 
 type Props = {
   visible: boolean;
-  scoreNum: number;
+  /** Eşleşme yüzdesi (ondalıklı olabilir, örn. 41.72). */
+  scorePercent: number;
   targetPct: number;
   advice: string | null | undefined;
 };
 
-export function CoachAdviceModalBody({ visible, scoreNum, targetPct, advice }: Props) {
-  const pct = Math.min(100, Math.max(0, scoreNum));
+function formatPercentLabel(n: number): string {
+  if (!Number.isFinite(n)) return "0";
+  const t = n.toFixed(2).replace(/\.?0+$/, "");
+  return t;
+}
+
+export function CoachAdviceModalBody({ visible, scorePercent, targetPct, advice }: Props) {
+  const raw = Number(scorePercent);
+  const pct = Math.min(100, Math.max(0, Number.isFinite(raw) ? raw : 0));
   const anim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -48,7 +56,7 @@ export function CoachAdviceModalBody({ visible, scoreNum, targetPct, advice }: P
       </View>
 
       <View style={styles.scoreWidget}>
-        <Text style={[styles.scoreBig, fontTight]}>%{scoreNum}</Text>
+        <Text style={[styles.scoreBig, fontTight]}>%{formatPercentLabel(pct)}</Text>
         <Text style={styles.scoreTarget}>Hedef: %{targetPct}</Text>
         <View style={styles.progressTrack}>
           <Animated.View style={[styles.progressFill, { width: widthInterpolated }]} />
