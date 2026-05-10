@@ -7,10 +7,16 @@ type PipelineState = {
   profileId: string | null;
   companyName: string;
   positionTitle: string;
+  cultureSummary: string | null;
   alignmentId: string | null;
   alignment: AlignmentScoreResponse | null;
   setCv: (cvId: string | null, displayName?: string | null) => void;
-  setCompany: (profileId: string, companyName: string, positionTitle: string) => void;
+  setCompany: (
+    profileId: string,
+    companyName: string,
+    positionTitle: string,
+    cultureSummary?: string | null,
+  ) => void;
   setAlignment: (alignmentId: string, payload: AlignmentScoreResponse) => void;
   resetFlow: () => void;
   hydrateFromApplication: (input: {
@@ -28,6 +34,7 @@ const initial = {
   profileId: null as string | null,
   companyName: "",
   positionTitle: "",
+  cultureSummary: null as string | null,
   alignmentId: null as string | null,
   alignment: null as AlignmentScoreResponse | null,
 };
@@ -39,8 +46,16 @@ export const usePipelineStore = create<PipelineState>((set) => ({
       cvId,
       cvDisplayName: cvId && displayName?.trim() ? displayName.trim() : "",
     }),
-  setCompany: (profileId, companyName, positionTitle) =>
-    set({ profileId, companyName, positionTitle }),
+  setCompany: (profileId, companyName, positionTitle, cultureSummary) =>
+    set({
+      profileId,
+      companyName,
+      positionTitle,
+      cultureSummary:
+        cultureSummary != null && String(cultureSummary).trim().length > 0
+          ? String(cultureSummary).trim()
+          : null,
+    }),
   setAlignment: (alignmentId, payload) => set({ alignmentId, alignment: payload }),
   resetFlow: () => set({ ...initial }),
   hydrateFromApplication: ({ cvId, profileId, alignmentId, companyName, positionTitle }) =>
@@ -51,6 +66,7 @@ export const usePipelineStore = create<PipelineState>((set) => ({
       alignmentId,
       companyName,
       positionTitle,
+      cultureSummary: null,
       alignment: null,
     }),
 }));

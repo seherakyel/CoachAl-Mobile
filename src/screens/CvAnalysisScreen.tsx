@@ -141,7 +141,12 @@ export function CvAnalysisScreen() {
   const analyzeMut = useMutation({
     mutationFn: analyzeCompany,
     onSuccess: (res) => {
-      setCompanyProfile(res.profile_id, res.company_name, res.position);
+      setCompanyProfile(
+        res.profile_id,
+        res.company_name,
+        res.position,
+        typeof res.culture_summary === "string" ? res.culture_summary : null,
+      );
       qc.invalidateQueries({ queryKey: ["dashboard"] });
       startJob({
         cvId: cvId!,

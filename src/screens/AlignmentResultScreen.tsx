@@ -1,31 +1,154 @@
-import { useEffect, useMemo, useState } from "react";
-import { View, ScrollView, ActivityIndicator } from "react-native";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { View, Text, ScrollView, StyleSheet, Pressable, Animated, Platform } from "react-native";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { RouteProp } from "@react-navigation/native";
-import { Appbar, Button, List, Snackbar, Text } from "react-native-paper";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 import { listAlignments } from "../services/api";
-import { RadialScore } from "../components/RadialScore";
-import { RiskBadge } from "../components/RiskBadge";
 import { usePipelineStore } from "../store/usePipelineStore";
 import type { AnalyzeParamList } from "../app/navigationTypes";
-import { CoachAppBarTheme, CoachColors, CoachRadii, CoachShadow } from "../theme/coachTheme";
+import { AR, fontTight } from "../components/analysis/analysisResultTokens";
+import { AnalysisCompanySummaryCard } from "../components/analysis/AnalysisCompanySummaryCard";
+import { AnalysisSectionTriggerRow } from "../components/analysis/AnalysisSectionTriggerRow";
+import { AnalysisBottomModal } from "../components/analysis/AnalysisBottomModal";
+import { CoachAdviceModalBody } from "../components/analysis/CoachAdviceModalBody";
+import { KeyTraitsModalBody } from "../components/analysis/KeyTraitsModalBody";
+import { SkillsListModalBody } from "../components/analysis/SkillsListModalBody";
 
 type Nav = NativeStackNavigationProp<AnalyzeParamList>;
 type R = RouteProp<AnalyzeParamList, "AlignmentResult">;
 
+type ActiveModal = "coach" | "traits" | "matched" | "missing" | null;
+
+const SKEL_BASE = "#e2e8f0";
+const SKEL_SHIMMER = "rgba(255,255,255,0.55)";
+
+const skelStyles = StyleSheet.create({
+  shimmerTrack: {
+    overflow: "hidden",
+  },
+  shimmerHighlight: {
+    ...StyleSheet.absoluteFillObject,
+    width: "55%",
+    backgroundColor: SKEL_SHIMMER,
+  },
+  titleGap: { marginTop: 10 },
+  companyRow: { flexDirection: "row", marginTop: 16, gap: 14 },
+  companyTextCol: { flex: 1, gap: 8 },
+  cultureKickerGap: { marginTop: 20 },
+  cultureBodyGap: { marginTop: 10 },
+  trigCard: { paddingVertical: 16 },
+  trigRow: { flexDirection: "row", alignItems: "center", gap: 12 },
+  trigTextCol: { flex: 1, gap: 8 },
+});
+
+function ShimmerBlock({
+  w,
+  h,
+  r = 8,
+  style,
+}: {
+  w: number | `${number}%`;
+  h: number;
+  r?: number;
+  style?: object;
+}) {
+  const a = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(a, { toValue: 1, duration: 1300, useNativeDriver: true }),
+        Animated.timing(a, { toValue: 0, duration: 0, useNativeDriver: true }),
+      ]),
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [a]);
+  const tx = a.interpolate({ inputRange: [0, 1], outputRange: [-100, 100] });
+  return (
+    <View
+      style={[
+        skelStyles.shimmerTrack,
+        { width: w, height: h, borderRadius: r, backgroundColor: SKEL_BASE },
+        style,
+      ]}
+    >
+      <Animated.View style={[skelStyles.shimmerHighlight, { transform: [{ translateX: tx }] }]} />
+    </View>
+  );
+}
+
+function SkelScreen({ onBack }: { onBack: () => void }) {
+  const insets = useSafeAreaInsets();
+  return (
+    <View style={[styles.screen, { paddingTop: insets.top }]}>
+      <View style={styles.topBar}>
+        <Pressable
+          onPress={onBack}
+          android_ripple={{ color: "rgba(15,23,42,0.08)" }}
+          style={({ pressed }) => [styles.backBtn, pressed && styles.pressed]}
+          hitSlop={12}
+        >
+          <MaterialCommunityIcons name="arrow-left" size={22} color={AR.slate700} />
+        </Pressable>
+      </View>
+      <ScrollView
+        contentContainerStyle={[styles.scrollPad, { paddingBottom: insets.bottom + 100 }]}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.pageHeader}>
+          <ShimmerBlock w="70%" h={22} r={6} />
+          <ShimmerBlock w="100%" h={14} r={4} style={skelStyles.titleGap} />
+        </View>
+        <View style={[styles.card, styles.skelWrap]}>
+          <ShimmerBlock w={80} h={10} r={4} />
+          <View style={skelStyles.companyRow}>
+            <ShimmerBlock w={72} h={72} r={16} />
+            <View style={skelStyles.companyTextCol}>
+              <ShimmerBlock w="85%" h={20} r={6} />
+              <ShimmerBlock w="50%" h={14} r={4} />
+            </View>
+          </View>
+          <ShimmerBlock w={100} h={10} r={4} style={skelStyles.cultureKickerGap} />
+          <ShimmerBlock w="100%" h={48} r={8} style={skelStyles.cultureBodyGap} />
+        </View>
+        {[1, 2, 3, 4].map((i) => (
+          <View key={`trig-${i}`} style={[styles.card, styles.skelWrap, skelStyles.trigCard]}>
+            <View style={skelStyles.trigRow}>
+              <ShimmerBlock w={44} h={44} r={12} />
+              <View style={skelStyles.trigTextCol}>
+                <ShimmerBlock w="55%" h={14} r={4} />
+                <ShimmerBlock w="80%" h={12} r={4} />
+              </View>
+            </View>
+          </View>
+        ))}
+      </ScrollView>
+    </View>
+  );
+}
 
 export function AlignmentResultScreen() {
   const navigation = useNavigation<Nav>();
   const route = useRoute<R>();
+  const insets = useSafeAreaInsets();
   const companyName = usePipelineStore((s) => s.companyName);
   const positionTitle = usePipelineStore((s) => s.positionTitle);
+  const cultureSummary = usePipelineStore((s) => s.cultureSummary);
   const alignment = usePipelineStore((s) => s.alignment);
   const alignmentId = usePipelineStore((s) => s.alignmentId);
-  const [snack, setSnack] = useState<string | null>(null);
-
   const resultId = route.params?.resultId;
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalKind, setModalKind] = useState<ActiveModal>(null);
+
+  useEffect(() => {
+    if (modalOpen || !modalKind) return;
+    if (Platform.OS === "ios") return;
+    const t = setTimeout(() => setModalKind(null), 400);
+    return () => clearTimeout(t);
+  }, [modalOpen, modalKind]);
 
   const listQuery = useQuery({
     queryKey: ["alignment-list"],
@@ -50,206 +173,298 @@ export function AlignmentResultScreen() {
   }, [resultId, listItem]);
 
   const payload = alignment;
-  const score = payload?.score_percent ?? listItem?.score ?? 0;
-  const risk = payload?.risk_level ?? listItem?.risk_level ?? "";
+  const scoreNum = Math.round(Number(payload?.score_percent ?? listItem?.score ?? 0)) || 0;
   const titleCompany = payload?.company_name ?? listItem?.company_name ?? companyName ?? "";
   const titlePos = payload?.position ?? listItem?.target_position ?? positionTitle ?? "";
   const effectiveAlignmentId = alignmentId ?? resultId ?? "";
+  const targetPct = scoreNum >= 90 ? 100 : 90;
+
+  const profileChips = useMemo(() => {
+    const m = payload?.matched_skills;
+    const x = payload?.missing_skills;
+    const chips: string[] = [];
+    if (Array.isArray(m)) chips.push(...m.map(String));
+    if (Array.isArray(x)) chips.push(...x.map(String));
+    const uniq = [...new Set(chips.map((s) => s.trim()).filter(Boolean))];
+    if (uniq.length > 0) return uniq.slice(0, 16);
+    const steps = payload?.next_steps;
+    if (Array.isArray(steps)) return steps.map(String).slice(0, 16);
+    return [];
+  }, [payload]);
+
+  const matchedUi = payload?.matched_skills_ui ?? [];
+  const missingUi = payload?.missing_skills_ui ?? [];
+
+  const cultureBody =
+    cultureSummary?.trim() ||
+    "Bu kayıt için şirket kültürü özeti henüz bağlı değil. Yeni bir analiz akışı tamamladığınızda burada görünür.";
 
   const isLoading = !payload && resultId && listQuery.isLoading;
 
-  const cardBase = {
-    backgroundColor: CoachColors.surfaceContainerLowest,
-    borderRadius: CoachRadii.xl,
-    borderWidth: 1,
-    borderColor: CoachColors.outlineVariant,
-    ...CoachShadow.card,
-  } as const;
+  const modalTitle =
+    modalKind === "coach"
+      ? "CoachAI tavsiyesi"
+      : modalKind === "traits"
+        ? "Aranan profil"
+        : modalKind === "matched"
+          ? "Eşleşen yetenekler"
+          : modalKind === "missing"
+            ? "Eksik / geliştirilebilir"
+            : "";
 
   if (isLoading) {
-    return (
-      <View style={{ flex: 1, backgroundColor: CoachColors.background }}>
-        <Appbar.Header elevated style={{ backgroundColor: CoachColors.componentSurface }} theme={CoachAppBarTheme}>
-          <Appbar.BackAction onPress={() => navigation.goBack()} />
-          <Appbar.Content title="Hizalama sonucu" titleStyle={{ fontWeight: "700", color: CoachColors.onComponentSurface }} />
-        </Appbar.Header>
-        <View style={{ flex: 1, justifyContent: "center", alignItems: "center", padding: 32 }}>
-          <ActivityIndicator size="large" color={CoachColors.secondary} />
-          <Text style={{ fontSize: 15, color: CoachColors.onSurfaceVariant, textAlign: "center", marginTop: 16 }}>
-            Sonuçlar yükleniyor…
-          </Text>
-        </View>
-      </View>
-    );
+    return <SkelScreen onBack={() => navigation.goBack()} />;
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: CoachColors.background }}>
-      <Appbar.Header elevated style={{ backgroundColor: CoachColors.componentSurface }} theme={CoachAppBarTheme}>
-        <Appbar.BackAction onPress={() => navigation.goBack()} />
-        <Appbar.Content title="Hizalama sonucu" titleStyle={{ fontWeight: "700", color: CoachColors.onComponentSurface }} />
-      </Appbar.Header>
-      <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 120 }}>
-        <Text style={{ fontSize: 28, fontWeight: "700", color: CoachColors.primary, textAlign: "center", marginBottom: 6 }}>
-          Eşleşme özeti
-        </Text>
-        <Text style={{ fontSize: 15, color: CoachColors.onSurfaceVariant, textAlign: "center", marginBottom: 20 }}>
-          Analiz tamamlandı. Rol ile uyumunuz aşağıda.
-        </Text>
+    <View style={styles.screen}>
+      <View style={[styles.topBar, { paddingTop: insets.top + 6 }]}>
+        <Pressable
+          onPress={() => navigation.goBack()}
+          android_ripple={{ color: "rgba(15,23,42,0.08)" }}
+          style={({ pressed }) => [styles.backBtn, pressed && styles.pressed]}
+          hitSlop={12}
+        >
+          <MaterialCommunityIcons name="arrow-left" size={22} color={AR.slate700} />
+        </Pressable>
+      </View>
 
-        <View style={{ ...cardBase, padding: 20, alignItems: "center", position: "relative" }}>
-          <View style={{ position: "absolute", top: 14, right: 14, zIndex: 2 }}>
-            <RiskBadge level={risk} />
-          </View>
-          <Text style={{ fontSize: 18, fontWeight: "700", color: CoachColors.primary, textAlign: "center", marginTop: 8 }}>
-            {titleCompany}
-          </Text>
-          <Text style={{ fontSize: 15, color: CoachColors.onSurfaceVariant, textAlign: "center", marginTop: 4 }}>
-            {titlePos}
-          </Text>
-          <View style={{ marginTop: 16, marginBottom: 8 }}>
-            <RadialScore percent={Number(score) || 0} color={CoachColors.successGreen} />
-          </View>
-          <Text style={{ fontSize: 13, color: CoachColors.onSurfaceVariant, textAlign: "center", maxWidth: 280 }}>
-            Match skoru; risk seviyesi rozetinde özetlenir.
+      <ScrollView
+        contentContainerStyle={[styles.scrollPad, { paddingBottom: insets.bottom + 112 }]}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      >
+        <View style={styles.pageHeader}>
+          <Text style={[styles.h1, fontTight]}>Şirket eşleşme analizi</Text>
+          <Text style={styles.subtitle}>
+            Profilinizin şirketin teknik ve kültürel beklentileriyle ne kadar örtüştüğü.
           </Text>
         </View>
 
-        {payload?.advice ? (
-          <View style={{ ...cardBase, padding: 18, marginTop: 16 }}>
-            <Text style={{ fontSize: 16, fontWeight: "700", color: CoachColors.primary }}>Koçluk özeti</Text>
-            <Text style={{ fontSize: 15, lineHeight: 22, color: CoachColors.onSurface, marginTop: 10 }}>{payload.advice}</Text>
-          </View>
-        ) : null}
+        <AnalysisCompanySummaryCard
+          companyName={titleCompany}
+          positionTitle={titlePos}
+          cultureBody={cultureBody}
+        />
 
-        {payload?.next_steps && payload.next_steps.length > 0 ? (
-          <View style={{ ...cardBase, padding: 18, marginTop: 16 }}>
-            <Text style={{ fontSize: 16, fontWeight: "700", color: CoachColors.primary, marginBottom: 10 }}>Sonraki adımlar</Text>
-            {payload.next_steps.map((s, idx) => (
-              <Text key={`${idx}-${s}`} style={{ fontSize: 15, lineHeight: 22, color: CoachColors.onSurface, marginBottom: 6 }}>
-                • {s}
-              </Text>
-            ))}
-          </View>
-        ) : null}
-
-        {payload?.matched_skills_ui && payload.matched_skills_ui.length > 0 ? (
-          <View style={{ ...cardBase, padding: 18, marginTop: 16 }}>
-            <Text style={{ fontSize: 16, fontWeight: "700", color: CoachColors.primary, marginBottom: 12 }}>Eşleşen yetenekler</Text>
-            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
-              {payload.matched_skills_ui.map((it, idx) => {
-                const label = (it.label as string) ?? (it.skill as string) ?? "Öğe";
-                return (
-                  <View
-                    key={`chip-${idx}`}
-                    style={{
-                      paddingHorizontal: 14,
-                      paddingVertical: 8,
-                      borderRadius: CoachRadii.full,
-                      backgroundColor: CoachColors.insightChipBg,
-                      borderWidth: 1,
-                      borderColor: CoachColors.outlineVariant,
-                    }}
-                  >
-                    <Text style={{ fontSize: 12, fontWeight: "600", color: CoachColors.secondary }}>{label}</Text>
-                  </View>
-                );
-              })}
-            </View>
-            <List.Section style={{ marginTop: 8, marginBottom: -8 }}>
-              {payload.matched_skills_ui.map((it, idx) => (
-                <List.Accordion title={(it.label as string) ?? (it.skill as string) ?? "Öğe"} key={`m-${idx}`}>
-                  <List.Item title={String(it.detail ?? "")} titleNumberOfLines={8} />
-                </List.Accordion>
-              ))}
-            </List.Section>
-          </View>
-        ) : null}
-
-        {payload?.missing_skills_ui && payload.missing_skills_ui.length > 0 ? (
-          <View style={{ ...cardBase, padding: 18, marginTop: 16 }}>
-            <Text style={{ fontSize: 16, fontWeight: "700", color: CoachColors.primary, marginBottom: 12 }}>Geliştirilmesi gerekenler</Text>
-            {payload.missing_skills_ui.map((it, idx) => (
-              <View
-                key={`x-${idx}`}
-                style={{
-                  flexDirection: "row",
-                  gap: 12,
-                  padding: 14,
-                  borderRadius: CoachRadii.lg,
-                  backgroundColor: CoachColors.surfaceContainerLow,
-                  borderWidth: 1,
-                  borderColor: CoachColors.outlineVariant,
-                  marginBottom: 10,
-                }}
-              >
-                <View
-                  style={{
-                    width: 36,
-                    height: 36,
-                    borderRadius: 18,
-                    backgroundColor: CoachColors.surfaceContainerHigh,
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
-                  <Text style={{ fontWeight: "700", color: CoachColors.onSurfaceVariant }}>!</Text>
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={{ fontSize: 15, fontWeight: "600", color: CoachColors.primary }}>
-                    {(it.label as string) ?? (it.skill as string) ?? "Öğe"}
-                  </Text>
-                  <Text style={{ fontSize: 14, lineHeight: 20, color: CoachColors.onSurfaceVariant, marginTop: 4 }}>
-                    {String(it.detail ?? "")}
-                  </Text>
-                </View>
-              </View>
-            ))}
-          </View>
-        ) : null}
+        <AnalysisSectionTriggerRow
+          variant="coach"
+          title="CoachAI tavsiyesi"
+          subtitle={`%${scoreNum} · Hedef %${targetPct}`}
+          onPress={() => {
+            setModalKind("coach");
+            setModalOpen(true);
+          }}
+        />
+        <AnalysisSectionTriggerRow
+          variant="traits"
+          title="Aranan profil"
+          subtitle={
+            profileChips.length > 0 ? `${profileChips.length} özet madde` : "Profil beklentileri ve kriterler"
+          }
+          onPress={() => {
+            setModalKind("traits");
+            setModalOpen(true);
+          }}
+        />
+        <AnalysisSectionTriggerRow
+          variant="matched"
+          title="Eşleşen yetenekler"
+          subtitle={
+            matchedUi.length > 0 ? `${matchedUi.length} yetenek · detay için dokunun` : "Liste bu kayıtta boş olabilir"
+          }
+          onPress={() => {
+            setModalKind("matched");
+            setModalOpen(true);
+          }}
+        />
+        <AnalysisSectionTriggerRow
+          variant="missing"
+          title="Eksik / geliştirilebilir"
+          subtitle={
+            missingUi.length > 0
+              ? `${missingUi.length} alan · detay için dokunun`
+              : "Liste bu kayıtta boş olabilir"
+          }
+          onPress={() => {
+            setModalKind("missing");
+            setModalOpen(true);
+          }}
+        />
 
         {resultId && !payload ? (
-          <View style={{ ...cardBase, padding: 18, marginTop: 16 }}>
-            <Text style={{ fontSize: 15, lineHeight: 22, color: CoachColors.onSurface }}>
-              Bu bağlantı için tam içerik bulunamadı. Liste özetinden skoru görüntülüyorsunuz. Tam beceri listesi için analizi yeniden çalıştırın.
+          <View style={styles.card}>
+            <Text style={styles.bodyText}>
+              Tam analiz içeriği cihazda yok. Özet skorunu görüntülüyorsunuz; tüm bölümler için analizi uygulamadan
+              yeniden çalıştırın.
             </Text>
           </View>
         ) : null}
 
-        <View style={{ height: 16 }} />
-        <Button
-          mode="contained"
-          icon="microphone-message"
-          buttonColor={CoachColors.primary}
-          textColor={CoachColors.onPrimary}
-          style={{ borderRadius: CoachRadii.xl }}
-          contentStyle={{ paddingVertical: 6 }}
-          onPress={() => {
-            navigation.getParent()?.navigate("Interviews", { screen: "InterviewHub" });
-          }}
-        >
-          Mülakata hazırlan
-        </Button>
-        <View style={{ height: 10 }} />
-        <Button
-          mode="outlined"
-          icon="file-chart"
-          disabled={!effectiveAlignmentId}
-          textColor={CoachColors.secondary}
-          style={{ borderRadius: CoachRadii.xl, borderColor: CoachColors.outlineVariant }}
+        <Pressable
           onPress={() =>
             navigation.getParent()?.navigate("Reports", {
               screen: "FeedbackReport",
               params: { alignmentId: effectiveAlignmentId, sessionId: null },
             })
           }
+          disabled={!effectiveAlignmentId}
+          android_ripple={{ color: "rgba(79,70,229,0.12)" }}
+          style={({ pressed }) => [
+            styles.linkRow,
+            pressed && styles.pressed,
+            !effectiveAlignmentId && { opacity: 0.45 },
+          ]}
         >
-          AI raporu üret
-        </Button>
+          <MaterialCommunityIcons name="file-chart-outline" size={20} color={AR.indigo600} />
+          <Text style={styles.linkText}>AI raporu (Şirket eşleşme analizi)</Text>
+        </Pressable>
       </ScrollView>
-      <Snackbar visible={!!snack} onDismiss={() => setSnack(null)} duration={6000}>
-        {snack ?? ""}
-      </Snackbar>
+
+      <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 14) }]}>
+        <Pressable
+          onPress={() => navigation.getParent()?.navigate("Interviews", { screen: "InterviewHub" })}
+          android_ripple={{ color: "rgba(255,255,255,0.25)" }}
+          style={({ pressed }) => [styles.cta, pressed && styles.ctaPressed]}
+        >
+          <MaterialCommunityIcons name="microphone" size={22} color={AR.white} />
+          <Text style={styles.ctaText}>Mülakata geç</Text>
+        </Pressable>
+      </View>
+
+      <AnalysisBottomModal
+        visible={modalOpen}
+        title={modalTitle}
+        onClose={() => setModalOpen(false)}
+        onDismiss={() => setModalKind(null)}
+      >
+        {modalKind === "coach" ? (
+          <CoachAdviceModalBody
+            visible={modalOpen && modalKind === "coach"}
+            scoreNum={scoreNum}
+            targetPct={targetPct}
+            advice={payload?.advice}
+          />
+        ) : null}
+        {modalKind === "traits" ? <KeyTraitsModalBody chips={profileChips} /> : null}
+        {modalKind === "matched" ? <SkillsListModalBody variant="matched" items={matchedUi} /> : null}
+        {modalKind === "missing" ? <SkillsListModalBody variant="missing" items={missingUi} /> : null}
+      </AnalysisBottomModal>
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  screen: {
+    flex: 1,
+    backgroundColor: AR.bg,
+  },
+  topBar: {
+    paddingHorizontal: 8,
+    paddingBottom: 4,
+    backgroundColor: AR.bg,
+  },
+  backBtn: {
+    width: 44,
+    height: 44,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 12,
+  },
+  pressed: {
+    opacity: Platform.OS === "ios" ? 0.85 : 1,
+    transform: [{ scale: Platform.OS === "android" ? 0.98 : 1 }],
+  },
+  scrollPad: {
+    width: "100%",
+    paddingHorizontal: 16,
+    paddingTop: 4,
+  },
+  pageHeader: {
+    width: "100%",
+    marginBottom: 18,
+  },
+  h1: {
+    fontSize: Platform.OS === "ios" ? 19 : 18,
+    fontWeight: "600",
+    color: AR.slate900,
+  },
+  subtitle: {
+    marginTop: 8,
+    fontSize: 14,
+    lineHeight: 20,
+    color: AR.slate500,
+    letterSpacing: -0.2,
+  },
+  card: {
+    width: "100%",
+    backgroundColor: AR.white,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: "rgba(226, 232, 240, 0.9)",
+    padding: 24,
+    marginBottom: 14,
+    ...Platform.select({
+      ios: {
+        shadowColor: "#0f172a",
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.06,
+        shadowRadius: 3,
+      },
+      android: { elevation: 2 },
+    }),
+  },
+  skelWrap: {
+    overflow: "hidden",
+  },
+  bodyText: {
+    fontSize: 15,
+    lineHeight: 24,
+    color: AR.slate700,
+    letterSpacing: -0.2,
+  },
+  linkRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    paddingVertical: 16,
+  },
+  linkText: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: AR.indigo600,
+    textDecorationLine: "underline",
+    letterSpacing: -0.2,
+  },
+  footer: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: 0,
+    paddingHorizontal: 16,
+    paddingTop: 10,
+    backgroundColor: AR.bg,
+    borderTopWidth: 1,
+    borderTopColor: AR.slate200,
+  },
+  cta: {
+    width: "100%",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 10,
+    backgroundColor: AR.indigo600,
+    paddingVertical: 14,
+    borderRadius: 14,
+  },
+  ctaPressed: {
+    opacity: 0.92,
+  },
+  ctaText: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: AR.white,
+    letterSpacing: -0.2,
+  },
+});
