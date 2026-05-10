@@ -16,11 +16,12 @@ import { AR } from "../components/analysis/analysisResultTokens";
 import { AnalysisCompanySummaryCard } from "../components/analysis/AnalysisCompanySummaryCard";
 import { AnalysisSectionTriggerRow } from "../components/analysis/AnalysisSectionTriggerRow";
 import { AnalysisBottomModal } from "../components/analysis/AnalysisBottomModal";
+import { SkillCardList } from "../components/analysis/SkillCardList";
 
 type Nav = NativeStackNavigationProp<ReportsParamList>;
 type R = RouteProp<ReportsParamList, "FeedbackReport">;
 
-type FeedbackModalKind = "eliminated" | "strengths" | "weaknesses" | "plan" | "resources" | "prep" | null;
+type FeedbackModalKind = "eliminated" | "strengths" | "weaknesses" | "resources" | null;
 
 function previewLine(text: string, max = 64): string {
   const t = text.replace(/\s+/g, " ").trim();
@@ -46,41 +47,13 @@ function FeedbackModalBody({ kind, data }: { kind: FeedbackModalKind; data: Feed
   }
   if (kind === "strengths") {
     const list = data.strengths ?? [];
-    if (list.length === 0) {
-      return <Text style={styles.modalMuted}>Güçlü yön listesi boş.</Text>;
-    }
-    return (
-      <View style={styles.bulletBlock}>
-        {list.map((s, idx) => (
-          <Text key={`st-${idx}`} style={styles.modalBullet}>
-            • {s}
-          </Text>
-        ))}
-      </View>
-    );
+    const rows = list.map((s) => ({ label: s, detail: "" }));
+    return <SkillCardList variant="matched" rows={rows} />;
   }
   if (kind === "weaknesses") {
     const list = data.weaknesses ?? [];
-    if (list.length === 0) {
-      return <Text style={styles.modalMuted}>Zayıf yön listesi boş.</Text>;
-    }
-    return (
-      <View style={styles.bulletBlock}>
-        {list.map((s, idx) => (
-          <Text key={`wk-${idx}`} style={styles.modalBullet}>
-            • {s}
-          </Text>
-        ))}
-      </View>
-    );
-  }
-  if (kind === "plan") {
-    const body = (data.action_plan ?? "").trim();
-    return body ? (
-      <Text style={styles.modalParagraph}>{body}</Text>
-    ) : (
-      <Text style={styles.modalMuted}>Aksiyon planı metni yok.</Text>
-    );
+    const rows = list.map((s) => ({ label: s, detail: "" }));
+    return <SkillCardList variant="missing" rows={rows} />;
   }
   if (kind === "resources") {
     const list = data.recommended_resources ?? [];
@@ -95,14 +68,6 @@ function FeedbackModalBody({ kind, data }: { kind: FeedbackModalKind; data: Feed
           </Text>
         ))}
       </View>
-    );
-  }
-  if (kind === "prep") {
-    const body = (data.estimated_prep_time ?? "").trim();
-    return body ? (
-      <Text style={styles.modalParagraph}>{body}</Text>
-    ) : (
-      <Text style={styles.modalMuted}>Tahmini süre bilgisi yok.</Text>
     );
   }
   return null;
@@ -155,16 +120,12 @@ export function FeedbackReportScreen() {
     modalKind === "eliminated"
       ? "Neden elenebilirsin?"
       : modalKind === "strengths"
-        ? "Güçlü yönler"
+        ? "Eşleşen yetenekler"
         : modalKind === "weaknesses"
-          ? "Zayıf yönler"
-          : modalKind === "plan"
-            ? "Aksiyon planı"
-            : modalKind === "resources"
-              ? "Önerilen kaynaklar"
-              : modalKind === "prep"
-                ? "Tahmini hazırlık süresi"
-                : "";
+          ? "Eksik / geliştirilebilir"
+          : modalKind === "resources"
+            ? "Önerilen kaynaklar"
+            : "";
 
   if (mutation.isPending) {
     return (
@@ -214,8 +175,6 @@ export function FeedbackReportScreen() {
   const weaknesses = data.weaknesses ?? [];
   const resources = data.recommended_resources ?? [];
   const why = (data.why_can_be_eliminated ?? "").trim();
-  const plan = (data.action_plan ?? "").trim();
-  const prep = (data.estimated_prep_time ?? "").trim();
 
   const summarySecondary = [
     `Skor: %${formatScore(data.score)} · Risk: ${data.risk_level ?? "—"}`,
@@ -256,35 +215,23 @@ export function FeedbackReportScreen() {
         />
         <AnalysisSectionTriggerRow
           variant="strength"
-          title="Güçlü yönler"
+          title="Eşleşen yetenekler"
           subtitle={strengths.length ? `${strengths.length} madde · ${previewLine(strengths[0] ?? "", 48)}` : "Liste boş olabilir"}
           onPress={() => openModal("strengths")}
         />
         <AnalysisSectionTriggerRow
           variant="weakness"
-          title="Zayıf yönler"
+          title="Eksik / geliştirilebilir"
           subtitle={
             weaknesses.length ? `${weaknesses.length} madde · ${previewLine(weaknesses[0] ?? "", 48)}` : "Liste boş olabilir"
           }
           onPress={() => openModal("weaknesses")}
         />
         <AnalysisSectionTriggerRow
-          variant="plan"
-          title="Aksiyon planı"
-          subtitle={previewLine(plan)}
-          onPress={() => openModal("plan")}
-        />
-        <AnalysisSectionTriggerRow
           variant="resources"
           title="Önerilen kaynaklar"
           subtitle={resources.length ? `${resources.length} kaynak` : "Kaynak önerisi yok"}
           onPress={() => openModal("resources")}
-        />
-        <AnalysisSectionTriggerRow
-          variant="time"
-          title="Tahmini hazırlık süresi"
-          subtitle={prep ? previewLine(prep, 56) : "Süre bilgisi"}
-          onPress={() => openModal("prep")}
         />
       </ScrollView>
 
