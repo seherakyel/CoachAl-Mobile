@@ -56,14 +56,13 @@ const cardShadow = Platform.select({
   default: {},
 });
 
-type SettingsSection = "profile" | "files" | "notifications" | "security" | "billing";
+type SettingsSection = "profile" | "files" | "notifications" | "security";
 
 const NAV: { id: SettingsSection; label: string; icon: string }[] = [
   { id: "profile", label: "Profil Yönetimi", icon: "account" },
   { id: "files", label: "CV ve Dosyalar", icon: "file-document-outline" },
   { id: "notifications", label: "Bildirim Ayarları", icon: "bell-ring-outline" },
   { id: "security", label: "Hesap ve Güvenlik", icon: "shield-lock-outline" },
-  { id: "billing", label: "Plan ve Ödeme", icon: "credit-card-outline" },
 ];
 
 export function SettingsScreen() {
@@ -368,18 +367,6 @@ export function SettingsScreen() {
                 <Text style={styles.btnPrimaryText}>Şifreyi Güncelle</Text>
               )}
             </Pressable>
-          </View>
-        ) : null}
-
-        {active === "billing" ? (
-          <View style={[styles.panel, cardShadow]}>
-            <View style={styles.panelHead}>
-              <MaterialCommunityIcons name="credit-card-outline" size={26} color={S.primary} />
-              <Text style={styles.panelTitle}>Plan ve Ödeme</Text>
-            </View>
-            <Text style={styles.placeholderText}>
-              Abonelik ve fatura yönetimi web üzerinden veya yakında mobilde sunulacaktır.
-            </Text>
           </View>
         ) : null}
 
