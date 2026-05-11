@@ -14,10 +14,13 @@ import { useQueryClient } from "@tanstack/react-query";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 import { CoachHeader } from "../components/chrome/CoachHeader";
+import { CoachPalette } from "../theme/coachTheme";
 import { emailLogout, updateUserDisplayName, updateUserPassword } from "../services/firebaseAuth";
 import { useAuthStore } from "../store/useAuthStore";
 
-/** HTML mockup (Tailwind theme) ile hizalı ayarlar paleti */
+const APP_BLUE = CoachPalette.midnightIndigo;
+
+/** Ayarlar — AppBar (#385F8C) ile uyumlu mavi-beyaz palet; mor yok */
 const S = {
   background: "#f8f9fa",
   surfaceLowest: "#ffffff",
@@ -25,10 +28,10 @@ const S = {
   outlineVariant: "#c7c4d7",
   onSurface: "#191c1d",
   onSurfaceVariant: "#464554",
-  primary: "#4648d4",
+  primary: APP_BLUE,
   onPrimary: "#ffffff",
-  primaryFixed: "#e1e0ff",
-  onPrimaryFixedVariant: "#2f2ebe",
+  /** Açık mavi alan vurgusu (banner vb.) */
+  primaryFixed: "rgba(56, 95, 140, 0.12)",
   surfaceLow: "#f3f4f5",
   surfaceBright: "#f8f9fa",
   error: "#ba1a1a",
@@ -47,7 +50,7 @@ const STORAGE = {
 const CARD_RADIUS = 24;
 const cardShadow = Platform.select({
   ios: {
-    shadowColor: "rgba(70, 72, 212, 0.12)",
+    shadowColor: "rgba(15, 23, 42, 0.08)",
     shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 1,
     shadowRadius: 20,
@@ -196,7 +199,7 @@ export function SettingsScreen() {
           <Text style={styles.profileRole}>{roleTitle.trim() || "Ünvan ekleyin"}</Text>
         </View>
 
-        {/* Bölüm seçici — referans: ikon + metin, seçili lavanta zemin */}
+        {/* Bölüm seçici — seçili: şeffaf zemin + sol ince mavi çizgi; ikon/metin gri */}
         <View style={[styles.navCard, cardShadow]}>
           {NAV.map((item) => {
             const selected = active === item.id;
@@ -204,7 +207,7 @@ export function SettingsScreen() {
               <Pressable
                 key={item.id}
                 onPress={() => setActive(item.id)}
-                android_ripple={{ color: "rgba(70, 72, 212, 0.12)" }}
+                android_ripple={{ color: "rgba(56, 95, 140, 0.12)" }}
                 style={({ pressed }) => [
                   styles.navRow,
                   selected && styles.navRowSelected,
@@ -214,9 +217,9 @@ export function SettingsScreen() {
                 <MaterialCommunityIcons
                   name={item.icon}
                   size={22}
-                  color={selected ? S.primary : S.onSurfaceVariant}
+                  color={S.onSurfaceVariant}
                 />
-                <Text style={[styles.navLabel, selected && styles.navLabelSelected]}>{item.label}</Text>
+                <Text style={styles.navLabel}>{item.label}</Text>
               </Pressable>
             );
           })}
@@ -492,16 +495,16 @@ const styles = StyleSheet.create({
     width: 96,
     height: 96,
     borderRadius: 48,
-    backgroundColor: S.primaryFixed,
+    backgroundColor: S.primary,
     borderWidth: 4,
-    borderColor: S.surfaceBright,
+    borderColor: S.surfaceHighest,
     alignItems: "center",
     justifyContent: "center",
   },
   avatarLetter: {
     fontSize: 36,
     fontWeight: "700",
-    color: S.primary,
+    color: S.onPrimary,
   },
   profileName: {
     fontSize: 20,
@@ -533,7 +536,10 @@ const styles = StyleSheet.create({
     borderRadius: 14,
   },
   navRowSelected: {
-    backgroundColor: S.primaryFixed,
+    backgroundColor: "transparent",
+    borderLeftWidth: 3,
+    borderLeftColor: S.primary,
+    paddingLeft: 11,
   },
   navRowPressed: {
     backgroundColor: "rgba(255,255,255,0.7)",
@@ -556,10 +562,6 @@ const styles = StyleSheet.create({
     color: S.onSurfaceVariant,
     fontWeight: "500",
     letterSpacing: -0.2,
-  },
-  navLabelSelected: {
-    color: S.primary,
-    fontWeight: "600",
   },
   navLabelLogout: {
     fontSize: 15,
