@@ -241,11 +241,6 @@ export function FeedbackReportScreen() {
           industry={storeIndustry ?? "Technology"}
           cultureBody={cultureBody}
           secondarySectionTitle={cultureSectionTitle}
-          matchScore={{
-            scorePercent: rawScore,
-            potentialPercent: coachPotential > scoreRounded ? coachPotential : null,
-            riskLabel: data.risk_level ?? null,
-          }}
         />
 
         <AnalysisSectionTriggerRow

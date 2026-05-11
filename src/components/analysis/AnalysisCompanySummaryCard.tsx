@@ -1,13 +1,6 @@
 import { View, Text, StyleSheet, Platform } from "react-native";
 import Svg, { Defs, LinearGradient, Rect, Stop } from "react-native-svg";
 import { AR, cardSurface, fontTight } from "./analysisResultTokens";
-import { AnalysisMatchScoreCard } from "./AnalysisMatchScoreCard";
-
-export type MatchScoreSummary = {
-  scorePercent: number;
-  potentialPercent?: number | null;
-  riskLabel?: string | null;
-};
 
 type Props = {
   companyName: string;
@@ -19,8 +12,6 @@ type Props = {
   positionLabelMode?: "hedefRol" | "plain";
   /** Alt bölüm başlığı (varsayılan: kültür özeti). Boş string veya undefined ile gizlenir. */
   secondarySectionTitle?: string;
-  /** Skor / hedef çubuğu (AI raporu vb.). */
-  matchScore?: MatchScoreSummary | null;
 };
 
 function isTrendyol(name: string) {
@@ -62,7 +53,6 @@ export function AnalysisCompanySummaryCard({
   industry,
   positionLabelMode = "hedefRol",
   secondarySectionTitle = "Kültür özeti",
-  matchScore,
 }: Props) {
   const letter = (companyName.trim()[0] ?? "?").toUpperCase();
   const showTrendyol = isTrendyol(companyName);
@@ -89,13 +79,6 @@ export function AnalysisCompanySummaryCard({
           <Text style={styles.sectorLine}>{positionLine}</Text>
         </View>
       </View>
-      {matchScore ? (
-        <AnalysisMatchScoreCard
-          scorePercent={matchScore.scorePercent}
-          potentialPercent={matchScore.potentialPercent}
-          riskLabel={matchScore.riskLabel}
-        />
-      ) : null}
       {secondarySectionTitle ? (
         <Text style={[styles.kicker, styles.kickerSpaced]}>{secondarySectionTitle}</Text>
       ) : null}
