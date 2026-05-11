@@ -197,7 +197,7 @@ export function SettingsScreen() {
           <Text style={styles.profileRole}>{roleTitle.trim() || "Ünvan ekleyin"}</Text>
         </View>
 
-        {/* Bölüm seçici */}
+        {/* Bölüm seçici — referans: ikon + metin, seçili lavanta zemin */}
         <View style={[styles.navCard, cardShadow]}>
           {NAV.map((item) => {
             const selected = active === item.id;
@@ -205,26 +205,36 @@ export function SettingsScreen() {
               <Pressable
                 key={item.id}
                 onPress={() => setActive(item.id)}
+                android_ripple={{ color: "rgba(70, 72, 212, 0.12)" }}
                 style={({ pressed }) => [
                   styles.navRow,
                   selected && styles.navRowSelected,
-                  pressed && !selected && { backgroundColor: S.surfaceLow },
+                  !selected && pressed && styles.navRowPressed,
                 ]}
               >
-                <View style={styles.navLeft}>
-                  <MaterialCommunityIcons
-                    name={item.icon}
-                    size={22}
-                    color={selected ? S.primary : S.onSurfaceVariant}
-                  />
-                  <Text style={[styles.navLabel, selected && styles.navLabelSelected]}>{item.label}</Text>
-                </View>
-                {selected ? (
-                  <MaterialCommunityIcons name="chevron-right" size={20} color={S.onPrimaryFixedVariant} />
-                ) : null}
+                <MaterialCommunityIcons
+                  name={item.icon}
+                  size={22}
+                  color={selected ? S.primary : S.onSurfaceVariant}
+                />
+                <Text style={[styles.navLabel, selected && styles.navLabelSelected]}>{item.label}</Text>
               </Pressable>
             );
           })}
+          <View style={styles.navDivider} />
+          <Pressable
+            onPress={async () => {
+              await emailLogout();
+              qc.clear();
+            }}
+            android_ripple={{ color: "rgba(186,26,26,0.12)" }}
+            style={({ pressed }) => [styles.navRow, styles.navRowLogout, pressed && styles.navRowLogoutPressed]}
+            accessibilityLabel="Çıkış Yap"
+            accessibilityRole="button"
+          >
+            <MaterialCommunityIcons name="logout" size={22} color={S.error} />
+            <Text style={styles.navLabelLogout}>Çıkış Yap</Text>
+          </Pressable>
         </View>
 
         {/* İçerik panelleri */}
@@ -373,22 +383,6 @@ export function SettingsScreen() {
           </View>
         ) : null}
 
-        <View style={styles.logoutCard}>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.logoutTitle}>Oturumu Kapat</Text>
-            <Text style={styles.logoutSub}>Hesabınızdan güvenli çıkış yapın.</Text>
-          </View>
-          <Pressable
-            onPress={async () => {
-              await emailLogout();
-              qc.clear();
-            }}
-            style={({ pressed }) => [styles.logoutBtn, pressed && { opacity: 0.9 }]}
-          >
-            <MaterialCommunityIcons name="logout" size={18} color={S.error} />
-            <Text style={styles.logoutBtnText}>Çıkış Yap</Text>
-          </Pressable>
-        </View>
       </ScrollView>
     </View>
   );
@@ -535,39 +529,56 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   navCard: {
-    backgroundColor: S.surfaceLowest,
+    backgroundColor: S.surfaceLow,
     borderRadius: CARD_RADIUS,
     borderWidth: 1,
     borderColor: S.surfaceHighest,
-    padding: 8,
+    padding: 6,
     marginBottom: 20,
-    gap: 4,
+    gap: 6,
   },
   navRow: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
-    paddingVertical: 12,
-    paddingHorizontal: 12,
-    borderRadius: 16,
+    gap: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 14,
+    borderRadius: 14,
   },
   navRowSelected: {
     backgroundColor: S.primaryFixed,
   },
-  navLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    flex: 1,
+  navRowPressed: {
+    backgroundColor: "rgba(255,255,255,0.7)",
+  },
+  navDivider: {
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: S.outlineVariant,
+    marginVertical: 2,
+    marginHorizontal: 8,
+    opacity: 0.8,
+  },
+  navRowLogout: {
+    marginTop: 0,
+  },
+  navRowLogoutPressed: {
+    backgroundColor: "rgba(255,218,214,0.35)",
   },
   navLabel: {
     fontSize: 15,
     color: S.onSurfaceVariant,
     fontWeight: "500",
+    letterSpacing: -0.2,
   },
   navLabelSelected: {
-    color: S.onPrimaryFixedVariant,
+    color: S.primary,
     fontWeight: "600",
+  },
+  navLabelLogout: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: S.error,
+    letterSpacing: -0.2,
   },
   panel: {
     backgroundColor: S.surfaceLowest,
@@ -703,35 +714,4 @@ const styles = StyleSheet.create({
     color: S.onSurfaceVariant,
     marginTop: 4,
   },
-  logoutCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: 16,
-    padding: 22,
-    borderRadius: CARD_RADIUS,
-    backgroundColor: "rgba(255,218,214,0.35)",
-    borderWidth: 1,
-    borderColor: "rgba(186,26,26,0.2)",
-    marginBottom: 32,
-  },
-  logoutTitle: {
-    fontSize: 15,
-    fontWeight: "600",
-    color: S.onSurface,
-    marginBottom: 4,
-  },
-  logoutSub: { fontSize: 14, color: S.onSurfaceVariant },
-  logoutBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    paddingHorizontal: 18,
-    paddingVertical: 10,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "rgba(186,26,26,0.3)",
-    backgroundColor: S.surfaceLowest,
-  },
-  logoutBtnText: { fontSize: 14, fontWeight: "600", color: S.error },
 });
