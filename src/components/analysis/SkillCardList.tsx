@@ -10,10 +10,10 @@ export type SkillCardRow = {
   detail?: string;
 };
 
-const rowBg = "#e8eaf6";
-const rowBorder = "#c7d2fe";
-const labelTint = "#1e1b4b";
-const detailTint = "#3730a3";
+const rowBg = "rgba(56, 95, 140, 0.08)";
+const rowBorder = "rgba(56, 95, 140, 0.26)";
+const labelTint = AR.slate900;
+const detailTint = AR.indigo600;
 
 type RowProps = {
   variant: SkillCardVariant;
@@ -28,7 +28,7 @@ function SkillCardRow({ variant, label, detail, open, onToggle }: RowProps) {
   return (
     <Pressable
       onPress={onToggle}
-      android_ripple={{ color: "rgba(79,70,229,0.14)" }}
+      android_ripple={{ color: "rgba(56, 95, 140, 0.14)" }}
       style={({ pressed }) => [styles.cardRow, pressed && styles.pressed]}
     >
       <View style={styles.cardRowMain}>
@@ -113,7 +113,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     ...Platform.select({
       ios: {
-        shadowColor: "#312e81",
+        shadowColor: "#0f172a",
         shadowOffset: { width: 0, height: 1 },
         shadowOpacity: 0.06,
         shadowRadius: 2,
@@ -136,7 +136,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     backgroundColor: "rgba(255,255,255,0.65)",
     borderWidth: 1,
-    borderColor: "rgba(199,210,254,0.9)",
+    borderColor: "rgba(56, 95, 140, 0.22)",
     alignItems: "center",
     justifyContent: "center",
   },

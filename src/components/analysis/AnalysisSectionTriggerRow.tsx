@@ -22,72 +22,48 @@ type Props = {
 };
 
 function IconBox({ variant }: { variant: TriggerVariant }) {
-  if (variant === "coach") {
+  if (
+    variant === "coach" ||
+    variant === "traits" ||
+    variant === "matched" ||
+    variant === "strength"
+  ) {
+    const name =
+      variant === "coach"
+        ? "lightbulb"
+        : variant === "traits"
+          ? "account-search-outline"
+          : "check-circle-outline";
     return (
-      <View style={[styles.iconBox, styles.coachIcon]}>
-        <MaterialCommunityIcons name="lightbulb" size={22} color={AR.white} />
+      <View style={[styles.iconBox, styles.iconSolidBlue]}>
+        <MaterialCommunityIcons name={name} size={22} color={AR.white} />
       </View>
     );
   }
-  if (variant === "traits") {
+  if (variant === "missing" || variant === "weakness") {
+    const name = variant === "weakness" ? "trending-down" : "trending-up";
     return (
-      <View style={[styles.iconBox, styles.traitsIcon]}>
-        <MaterialCommunityIcons name="account-search-outline" size={22} color={AR.indigo600} />
+      <View style={[styles.iconBox, styles.iconDashedOutline]}>
+        <MaterialCommunityIcons name={name} size={22} color={AR.indigo600} />
       </View>
     );
   }
-  if (variant === "matched") {
+  if (variant === "risk" || variant === "plan" || variant === "time") {
+    const name =
+      variant === "risk"
+        ? "alert-decagram-outline"
+        : variant === "plan"
+          ? "clipboard-list-outline"
+          : "clock-outline";
     return (
-      <View style={[styles.iconBox, styles.matchedIcon]}>
-        <MaterialCommunityIcons name="check-circle-outline" size={22} color={AR.indigo600} />
-      </View>
-    );
-  }
-  if (variant === "missing") {
-    return (
-      <View style={[styles.iconBox, styles.missingIcon]}>
-        <MaterialCommunityIcons name="trending-up" size={22} color={AR.indigo600} />
-      </View>
-    );
-  }
-  if (variant === "risk") {
-    return (
-      <View style={[styles.iconBox, styles.traitsIcon]}>
-        <MaterialCommunityIcons name="alert-decagram-outline" size={22} color={AR.indigo600} />
-      </View>
-    );
-  }
-  if (variant === "strength") {
-    return (
-      <View style={[styles.iconBox, styles.matchedIcon]}>
-        <MaterialCommunityIcons name="check-circle-outline" size={22} color={AR.indigo600} />
-      </View>
-    );
-  }
-  if (variant === "weakness") {
-    return (
-      <View style={[styles.iconBox, styles.missingIcon]}>
-        <MaterialCommunityIcons name="trending-down" size={22} color={AR.indigo600} />
-      </View>
-    );
-  }
-  if (variant === "plan") {
-    return (
-      <View style={[styles.iconBox, styles.traitsIcon]}>
-        <MaterialCommunityIcons name="clipboard-list-outline" size={22} color={AR.indigo600} />
-      </View>
-    );
-  }
-  if (variant === "time") {
-    return (
-      <View style={[styles.iconBox, styles.traitsIcon]}>
-        <MaterialCommunityIcons name="clock-outline" size={22} color={AR.indigo600} />
+      <View style={[styles.iconBox, styles.iconSolidBlue]}>
+        <MaterialCommunityIcons name={name} size={22} color={AR.white} />
       </View>
     );
   }
   return (
-    <View style={[styles.iconBox, styles.traitsIcon]}>
-      <MaterialCommunityIcons name="help-circle-outline" size={22} color={AR.indigo600} />
+    <View style={[styles.iconBox, styles.iconSolidBlue]}>
+      <MaterialCommunityIcons name="help-circle-outline" size={22} color={AR.white} />
     </View>
   );
 }
@@ -97,7 +73,7 @@ export function AnalysisSectionTriggerRow({ variant, title, subtitle, onPress, d
     <Pressable
       onPress={onPress}
       disabled={disabled}
-      android_ripple={{ color: "rgba(79,70,229,0.12)" }}
+      android_ripple={{ color: AR.rippleBlue }}
       style={({ pressed }) => [
         styles.row,
         pressed && !disabled && styles.pressed,
@@ -109,7 +85,7 @@ export function AnalysisSectionTriggerRow({ variant, title, subtitle, onPress, d
         <Text style={[styles.title, fontTight]} numberOfLines={2}>
           {title}
         </Text>
-        <Text style={styles.subtitle} numberOfLines={2}>
+        <Text style={styles.subtitle} numberOfLines={4}>
           {subtitle}
         </Text>
       </View>
@@ -152,33 +128,23 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  coachIcon: {
+  iconSolidBlue: {
     backgroundColor: AR.indigo600,
     ...Platform.select({
       ios: {
         shadowColor: AR.indigo600,
         shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.2,
+        shadowOpacity: 0.22,
         shadowRadius: 4,
       },
       android: { elevation: 2 },
     }),
   },
-  traitsIcon: {
-    backgroundColor: AR.indigo50,
-    borderWidth: 1,
-    borderColor: AR.indigo100,
-  },
-  matchedIcon: {
-    backgroundColor: AR.indigo50,
-    borderWidth: 1,
-    borderColor: AR.indigo100,
-  },
-  missingIcon: {
+  iconDashedOutline: {
     backgroundColor: AR.white,
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderStyle: "dashed",
-    borderColor: AR.indigo200,
+    borderColor: AR.indigo600,
   },
   textCol: {
     flex: 1,
@@ -195,5 +161,6 @@ const styles = StyleSheet.create({
     color: AR.slate500,
     letterSpacing: -0.1,
     lineHeight: 16,
+    flexShrink: 1,
   },
 });

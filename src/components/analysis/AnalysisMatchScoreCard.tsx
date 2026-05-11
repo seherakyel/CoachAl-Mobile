@@ -119,7 +119,7 @@ const styles = StyleSheet.create({
     marginTop: 12,
     fontSize: 13,
     fontWeight: "600",
-    color: AR.slate500,
+    color: AR.indigo600,
     letterSpacing: 0.2,
   },
 });

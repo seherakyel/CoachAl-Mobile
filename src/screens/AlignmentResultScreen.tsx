@@ -345,7 +345,7 @@ export function AlignmentResultScreen() {
             })
           }
           disabled={!effectiveAlignmentId}
-          android_ripple={{ color: "rgba(79,70,229,0.12)" }}
+          android_ripple={{ color: "rgba(56, 95, 140, 0.12)" }}
           style={({ pressed }) => [
             styles.linkRow,
             pressed && styles.pressed,
