@@ -17,8 +17,6 @@ import { CoachHeader } from "../components/chrome/CoachHeader";
 import { emailLogout, updateUserDisplayName, updateUserPassword } from "../services/firebaseAuth";
 import { useAuthStore } from "../store/useAuthStore";
 
-const APP_VERSION = "1.0.0";
-
 /** HTML mockup (Tailwind theme) ile hizalı ayarlar paleti */
 const S = {
   background: "#f8f9fa",
@@ -31,11 +29,8 @@ const S = {
   onPrimary: "#ffffff",
   primaryFixed: "#e1e0ff",
   onPrimaryFixedVariant: "#2f2ebe",
-  secondaryContainer: "#d8dff9",
-  onSecondaryContainer: "#5b6278",
   surfaceLow: "#f3f4f5",
   surfaceBright: "#f8f9fa",
-  tertiary: "#4651b9",
   error: "#ba1a1a",
   onErrorContainer: "#93000a",
   errorContainer: "#ffdad6",
@@ -200,25 +195,6 @@ export function SettingsScreen() {
           </View>
           <Text style={styles.profileName}>{showName}</Text>
           <Text style={styles.profileRole}>{roleTitle.trim() || "Ünvan ekleyin"}</Text>
-          <View style={styles.proChip}>
-            <MaterialCommunityIcons name="check-decagram" size={14} color={S.onSecondaryContainer} />
-            <Text style={styles.proChipText}>Pro Üye</Text>
-          </View>
-        </View>
-
-        {/* Pro CTA */}
-        <View style={[styles.proCta, cardShadow]}>
-          <Text style={styles.proCtaTitle}>Pro&apos;ya Geç</Text>
-          <Text style={styles.proCtaSub}>Tüm yapay zeka özelliklerini aç.</Text>
-          <Pressable
-            style={styles.proCtaBtn}
-            onPress={() => {
-              setMsg("Yakında.");
-              setTimeout(() => setMsg(null), 2000);
-            }}
-          >
-            <Text style={styles.proCtaBtnText}>Upgrade to Pro</Text>
-          </Pressable>
         </View>
 
         {/* Bölüm seçici */}
@@ -397,17 +373,6 @@ export function SettingsScreen() {
           </View>
         ) : null}
 
-        {/* Uygulama bilgisi */}
-        <View style={[styles.panel, cardShadow, styles.mutedPanel]}>
-          <View style={styles.panelHead}>
-            <MaterialCommunityIcons name="information-outline" size={26} color={S.onSurfaceVariant} />
-            <Text style={styles.panelTitleMuted}>Uygulama Bilgisi</Text>
-          </View>
-          <InfoRow label="Versiyon" value={APP_VERSION} />
-          <InfoRow label="Backend" value="FastAPI + Gemini" />
-          <InfoRow label="Veritabanı" value="Firebase" last />
-        </View>
-
         <View style={styles.logoutCard}>
           <View style={{ flex: 1 }}>
             <Text style={styles.logoutTitle}>Oturumu Kapat</Text>
@@ -490,15 +455,6 @@ function ToggleRow({
   );
 }
 
-function InfoRow({ label, value, last }: { label: string; value: string; last?: boolean }) {
-  return (
-    <View style={[styles.infoRow, !last && styles.infoRowBorder]}>
-      <Text style={styles.infoLabel}>{label}</Text>
-      <Text style={styles.infoValue}>{value}</Text>
-    </View>
-  );
-}
-
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
@@ -576,55 +532,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 20,
     color: S.onSurfaceVariant,
-    marginBottom: 12,
     textAlign: "center",
-  },
-  proChip: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    backgroundColor: S.secondaryContainer,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 999,
-  },
-  proChipText: {
-    fontSize: 12,
-    fontWeight: "600",
-    letterSpacing: 0.6,
-    color: S.onSecondaryContainer,
-  },
-  proCta: {
-    borderRadius: CARD_RADIUS,
-    padding: 20,
-    marginBottom: 16,
-    backgroundColor: S.primary,
-    borderWidth: 1,
-    borderColor: S.tertiary,
-  },
-  proCtaTitle: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: S.onPrimary,
-    marginBottom: 4,
-  },
-  proCtaSub: {
-    fontSize: 13,
-    lineHeight: 18,
-    color: "rgba(255,255,255,0.9)",
-    marginBottom: 14,
-  },
-  proCtaBtn: {
-    backgroundColor: S.surfaceLowest,
-    paddingVertical: 10,
-    borderRadius: 12,
-    alignItems: "center",
-  },
-  proCtaBtnText: {
-    fontSize: 12,
-    fontWeight: "600",
-    letterSpacing: 0.5,
-    color: S.primary,
   },
   navCard: {
     backgroundColor: S.surfaceLowest,
@@ -670,9 +578,6 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     gap: 16,
   },
-  mutedPanel: {
-    backgroundColor: S.surfaceLow,
-  },
   panelHead: {
     flexDirection: "row",
     alignItems: "center",
@@ -686,12 +591,6 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: "700",
     color: S.onSurface,
-    letterSpacing: -0.3,
-  },
-  panelTitleMuted: {
-    fontSize: 22,
-    fontWeight: "700",
-    color: S.onSurfaceVariant,
     letterSpacing: -0.3,
   },
   fieldBlock: { gap: 8 },
@@ -804,18 +703,6 @@ const styles = StyleSheet.create({
     color: S.onSurfaceVariant,
     marginTop: 4,
   },
-  infoRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingVertical: 10,
-  },
-  infoRowBorder: {
-    borderBottomWidth: 1,
-    borderBottomColor: S.outlineVariant,
-  },
-  infoLabel: { fontSize: 14, color: S.onSurfaceVariant },
-  infoValue: { fontSize: 14, color: S.onSurface, fontWeight: "500" },
   logoutCard: {
     flexDirection: "row",
     alignItems: "center",
