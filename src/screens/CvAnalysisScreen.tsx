@@ -19,7 +19,8 @@ import {
 } from "@react-native-documents/picker";
 import { Appbar, Button, Snackbar, Text, TextInput } from "react-native-paper";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
-import { analyzeCompany, uploadCvPdf, type UploadProgress } from "../services/api";
+import { CompanyAutocomplete } from "../components/CompanyAutocomplete";
+import { analyzeCompany, uploadCvPdf, type CompanySearchItem, type UploadProgress } from "../services/api";
 import { extractDetail } from "../services/apiClient";
 import { usePipelineStore } from "../store/usePipelineStore";
 import { useAnalysisJobStore } from "../store/useAnalysisJobStore";
@@ -53,6 +54,7 @@ export function CvAnalysisScreen() {
   const [showUploadOk, setShowUploadOk] = useState(false);
   const [step2Unlocked, setStep2Unlocked] = useState(false);
   const [companyName, setCompanyName] = useState("");
+  const [selectedCompany, setSelectedCompany] = useState<CompanySearchItem | null>(null);
   const [positionTitle, setPositionTitle] = useState("");
 
   const abortRef = useRef<AbortController | null>(null);
@@ -174,6 +176,7 @@ export function CvAnalysisScreen() {
     setShowUploadOk(false);
     setStep2Unlocked(false);
     setCompanyName("");
+    setSelectedCompany(null);
     setPositionTitle("");
     setGlobalError(null);
   };
@@ -310,16 +313,14 @@ export function CvAnalysisScreen() {
             </View>
             <View style={{ gap: 16 }}>
               <View>
-                <Text style={{ fontSize: 14, fontWeight: "500", color: CoachColors.onSurface, marginBottom: 8 }}>Hedef Şirket</Text>
-                <TextInput
-                  mode="outlined"
+                <CompanyAutocomplete
                   value={companyName}
                   onChangeText={setCompanyName}
+                  selectedCompany={selectedCompany}
+                  onSelectCompany={setSelectedCompany}
+                  disabled={!step2Unlocked}
                   placeholder="örn: Trendyol"
-                  outlineColor={CoachColors.outlineVariant}
-                  activeOutlineColor={CoachColors.secondary}
-                  style={{ backgroundColor: CoachColors.surfaceContainerLowest }}
-                  editable={step2Unlocked}
+                  label="Hedef Şirket"
                 />
               </View>
               <View>
@@ -347,7 +348,12 @@ export function CvAnalysisScreen() {
               onPress={() => {
                 if (!cvId) return;
                 setGlobalError(null);
-                analyzeMut.mutate({ company_name: companyName.trim(), position: positionTitle.trim() });
+                analyzeMut.mutate({
+                  company_name: companyName.trim(),
+                  position: positionTitle.trim(),
+                  universal_name: selectedCompany?.universal_name,
+                  linkedin_company_id: selectedCompany?.id,
+                });
               }}
               buttonColor={CoachColors.primary}
               textColor={CoachColors.onPrimary}

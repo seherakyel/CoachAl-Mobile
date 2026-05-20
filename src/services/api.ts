@@ -23,6 +23,13 @@ export type CvUploadResponse = {
 export type CompanyAnalyzeBody = {
   company_name: string;
   position: string;
+  /**
+   * Web’deki LinkedIn şirket seçimiyle gelen stabil kimlik.
+   * Backend destekliyorsa, serbest metne ek olarak gönderilir.
+   */
+  universal_name?: string;
+  /** Alternatif backend sözleşmeleri için opsiyonel id alanı. */
+  linkedin_company_id?: string;
 };
 
 export type CompanyAnalyzeResponse = {
@@ -35,6 +42,15 @@ export type CompanyAnalyzeResponse = {
   common_questions?: unknown;
   key_traits?: unknown;
   industry?: string;
+};
+
+export type CompanySearchItem = {
+  id: string;
+  name: string;
+  universal_name?: string;
+  logo_url?: string | null;
+  industry?: string | null;
+  entity_type?: string;
 };
 
 export type AlignmentScoreBody = {
@@ -318,6 +334,42 @@ function makeAbortError(): Error {
 export async function analyzeCompany(body: CompanyAnalyzeBody): Promise<CompanyAnalyzeResponse> {
   const res = await api.post<CompanyAnalyzeResponse>("/company/analyze", body);
   return res.data;
+}
+
+export async function searchCompanies(
+  q: string,
+  opts?: { signal?: AbortSignal; limit?: number },
+): Promise<CompanySearchItem[]> {
+  const query = q.trim();
+  if (query.length < 2) return [];
+  const res = await api.get<any>("/company/search", {
+    // backend’ler farklı param adı kullanabiliyor: q / query / term
+    params: { q: query, query, term: query, limit: opts?.limit ?? 8 },
+    signal: opts?.signal,
+  });
+
+  const data = res.data;
+  if (__DEV__) {
+    console.info("[api.searchCompanies] raw response", data);
+  }
+
+  // Esnek normalize: {items:[]}, {results:[]}, {companies:[]}, {data:{items:[]}}, veya doğrudan []
+  const candidates: unknown[] = [
+    data,
+    data?.items,
+    data?.results,
+    data?.companies,
+    data?.data,
+    data?.data?.items,
+    data?.data?.results,
+    data?.data?.companies,
+  ];
+
+  for (const c of candidates) {
+    if (Array.isArray(c)) return c as CompanySearchItem[];
+  }
+
+  return [];
 }
 
 export async function scoreAlignment(body: AlignmentScoreBody): Promise<AlignmentScoreResponse> {
