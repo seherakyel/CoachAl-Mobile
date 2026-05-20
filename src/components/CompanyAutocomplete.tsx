@@ -79,6 +79,18 @@ export function CompanyAutocomplete({
               count: Array.isArray(res) ? res.length : 0,
               first: Array.isArray(res) && res.length > 0 ? res[0] : null,
             });
+            console.info(
+              "[CompanyAutocomplete] companies",
+              Array.isArray(res)
+                ? res.map((c) => ({
+                    id: c.id,
+                    name: c.name,
+                    universal_name: c.universal_name,
+                    industry: c.industry,
+                    has_logo: !!c.logo_url,
+                  }))
+                : res,
+            );
           }
         })
         .catch((e: unknown) => {
@@ -186,7 +198,20 @@ export function CompanyAutocomplete({
                   style={({ pressed }) => [styles.row, pressed && styles.rowPressed]}
                 >
                   {item.logo_url ? (
-                    <Image source={{ uri: item.logo_url }} style={styles.logo} />
+                    <Image
+                      source={{ uri: item.logo_url }}
+                      style={styles.logo}
+                      resizeMode="cover"
+                      onError={(ev) => {
+                        if (__DEV__) {
+                          console.warn("[CompanyAutocomplete] logo load failed", {
+                            name: item.name,
+                            logo_url: item.logo_url,
+                            error: ev?.nativeEvent,
+                          });
+                        }
+                      }}
+                    />
                   ) : (
                     <View style={styles.logoFallback}>
                       <Text style={styles.logoFallbackText}>

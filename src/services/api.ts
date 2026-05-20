@@ -366,10 +366,59 @@ export async function searchCompanies(
   ];
 
   for (const c of candidates) {
-    if (Array.isArray(c)) return c as CompanySearchItem[];
+    if (Array.isArray(c)) {
+      return (c as unknown[]).map(normalizeCompanySearchItem).filter(Boolean) as CompanySearchItem[];
+    }
   }
 
   return [];
+}
+
+function normalizeCompanySearchItem(raw: unknown): CompanySearchItem | null {
+  if (!raw || typeof raw !== "object") return null;
+  const r = raw as any;
+
+  const id =
+    String(r.id ?? r.company_id ?? r.companyId ?? r.organizationId ?? r.urn ?? r.universal_name ?? r.universalName ?? r.name ?? "")
+      .trim() || "";
+
+  const name = String(r.name ?? r.company_name ?? r.companyName ?? r.title ?? r.displayName ?? "").trim();
+  if (!name) return null;
+
+  const universal_name = String(r.universal_name ?? r.universalName ?? r.slug ?? r.publicIdentifier ?? "").trim() || undefined;
+  const industry = String(r.industry ?? r.category ?? r.headline ?? r.subtitle ?? "").trim() || undefined;
+
+  // Logo: desteklenen olası alan isimleri + LinkedIn vectorImage formatı
+  let logo_url: string | undefined =
+    (typeof r.logo_url === "string" && r.logo_url) ||
+    (typeof r.logoUrl === "string" && r.logoUrl) ||
+    (typeof r.logo === "string" && r.logo) ||
+    (typeof r.logoURL === "string" && r.logoURL) ||
+    (typeof r.imageUrl === "string" && r.imageUrl) ||
+    undefined;
+
+  const vector = r.logoResolutionResult?.vectorImage ?? r.vectorImage ?? r.logo?.vectorImage;
+  if (!logo_url && vector && typeof vector === "object") {
+    const rootUrl = typeof vector.rootUrl === "string" ? vector.rootUrl : "";
+    const artifacts = Array.isArray(vector.artifacts) ? vector.artifacts : [];
+    const seg = artifacts?.[0]?.fileIdentifyingUrlPathSegment;
+    if (rootUrl && typeof seg === "string" && seg) logo_url = rootUrl + seg;
+  }
+
+  // Bazı backend’ler relative URL döndürebilir → base ile birleştirme yapmıyoruz (CDN olabilir).
+  // Sadece boşlukları temizle.
+  if (logo_url) logo_url = String(logo_url).trim();
+
+  const entity_type = String(r.entity_type ?? r.entityType ?? r.type ?? "").trim() || undefined;
+
+  return {
+    id,
+    name,
+    universal_name,
+    logo_url: logo_url || null,
+    industry: industry || null,
+    entity_type,
+  };
 }
 
 export async function scoreAlignment(body: AlignmentScoreBody): Promise<AlignmentScoreResponse> {
