@@ -10,7 +10,7 @@ const TAB_ICONS: Record<keyof MainTabParamList, string> = {
   CvAnalysis: "file-document-outline",
   Interviews: "head-lightbulb-outline",
   Reports: "chart-box-outline",
-  Settings: "cog-outline",
+  Settings: "account-outline",
 };
 
 const TAB_LABELS: Record<keyof MainTabParamList, string> = {
@@ -18,7 +18,7 @@ const TAB_LABELS: Record<keyof MainTabParamList, string> = {
   CvAnalysis: "CV Analizi",
   Interviews: "Mülakatlar",
   Reports: "Raporlar",
-  Settings: "Ayarlar",
+  Settings: "Profil",
 };
 
 export function CoachTabBar({ state, descriptors, navigation }: BottomTabBarProps) {

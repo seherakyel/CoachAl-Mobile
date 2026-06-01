@@ -96,23 +96,12 @@ function MetricAvgMatch(props: { value: string }) {
 export function DashboardScreen() {
   const navigation = useNavigation<DashNav>();
   const user = useAuthStore((s) => s.user);
-  const [q, setQ] = useState("");
-
   const { data, isLoading, refetch, isRefetching, isError } = useQuery({
     queryKey: ["dashboard"],
     queryFn: getDashboardSummary,
   });
 
-  const apps = useMemo(() => {
-    const items = data?.applications ?? [];
-    const s = q.trim().toLowerCase();
-    if (!s) return items;
-    return items.filter(
-      (a) =>
-        (a.company_name ?? "").toLowerCase().includes(s) ||
-        (a.position ?? "").toLowerCase().includes(s)
-    );
-  }, [data, q]);
+  const apps = useMemo(() => data?.applications ?? [], [data]);
 
   const avgScore = useMemo(() => {
     const scored = (data?.applications ?? []).filter((a) => a.alignment_score != null);
@@ -160,7 +149,7 @@ export function DashboardScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: CoachColors.background }}>
-      <CoachHeader searchValue={q} onSearchChange={setQ} />
+      <CoachHeader />
       {isLoading ? (
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
           <ActivityIndicator color={CoachColors.secondary} />

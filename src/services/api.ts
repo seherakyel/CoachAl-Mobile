@@ -7,17 +7,47 @@ export type HealthResponse = {
   message: string;
 };
 
+export type CvParsedData = {
+  skills: string[];
+  experience_years?: number | null;
+  education_level?: string | null;
+  summary?: string;
+  match_score_logic?: string;
+};
+
 export type CvUploadResponse = {
   cv_id: string;
   file_name: string;
-  parsed_data: {
-    skills: string[];
-    experience_years?: number | null;
-    education_level?: string | null;
-    summary?: string;
-    match_score_logic?: string;
-  };
+  parsed_data: CvParsedData;
   extracted_text_preview?: string;
+  /** Backend Firestore’da kayıt varsa Gemini atlanır */
+  from_cache?: boolean;
+  analysis_complete?: boolean;
+};
+
+export type CvListItem = {
+  cv_id: string;
+  file_name: string;
+  summary?: string;
+  created_at?: string;
+  analysis_complete?: boolean;
+  storage_path?: string;
+};
+
+export type CvListResponse = {
+  items: CvListItem[];
+  cv_count?: number;
+  max_cvs?: number;
+};
+
+export type CvAnalysisResponse = {
+  cv_id: string;
+  file_name: string;
+  analysis_complete: boolean;
+  parsed_data: CvParsedData;
+  extracted_text_preview?: string;
+  analyzed_at?: string;
+  storage_path?: string;
 };
 
 export type CompanyAnalyzeBody = {
@@ -226,6 +256,88 @@ export async function getHealth(): Promise<HealthResponse> {
   return res.data;
 }
 
+/** Kullanıcının kayıtlı CV listesi (web: items + cv_count + max_cvs) */
+export async function fetchCvList(): Promise<CvListResponse> {
+  const res = await api.get<CvListResponse | CvListItem[] | { items: CvListItem[] }>("/cv/list");
+  const data = res.data;
+  if (Array.isArray(data)) {
+    return { items: data, cv_count: data.length, max_cvs: 3 };
+  }
+  if (data && typeof data === "object" && Array.isArray((data as CvListResponse).items)) {
+    const d = data as CvListResponse;
+    return {
+      items: d.items,
+      cv_count: d.cv_count ?? d.items.length,
+      max_cvs: d.max_cvs ?? 3,
+    };
+  }
+  return { items: [], cv_count: 0, max_cvs: 3 };
+}
+
+/** @deprecated Use fetchCvList().items */
+export async function listUserCvs(): Promise<CvListItem[]> {
+  const { items } = await fetchCvList();
+  return items;
+}
+
+function normalizeCvDetailPayload(raw: unknown, cvId: string): CvAnalysisResponse | null {
+  if (!raw || typeof raw !== "object") return null;
+  const r = raw as Record<string, unknown>;
+  const parsed =
+    (r.parsed_data as CvParsedData | undefined) ??
+    ({
+      skills: Array.isArray(r.skills) ? (r.skills as string[]) : [],
+      experience_years: (r.experience_years as number | null) ?? null,
+      education_level: (r.education_level as string | null) ?? null,
+      summary: typeof r.summary === "string" ? r.summary : "",
+      match_score_logic: typeof r.match_score_logic === "string" ? r.match_score_logic : "",
+    } satisfies CvParsedData);
+
+  const fileName = String(r.file_name ?? r.fileName ?? "CV").trim() || "CV";
+  const id = String(r.cv_id ?? r.cvId ?? cvId).trim() || cvId;
+
+  return {
+    cv_id: id,
+    file_name: fileName,
+    analysis_complete: Boolean(
+      r.analysis_complete ??
+        ((Array.isArray(parsed.skills) && parsed.skills.length > 0) || !!(parsed.summary?.trim())),
+    ),
+    parsed_data: parsed,
+    extracted_text_preview:
+      typeof r.extracted_text_preview === "string" ? r.extracted_text_preview : undefined,
+    analyzed_at: typeof r.analyzed_at === "string" ? r.analyzed_at : undefined,
+    storage_path: typeof r.storage_path === "string" ? r.storage_path : undefined,
+  };
+}
+
+/** Web: GET /api/cv/{cv_id} — Firestore önbellek; yoksa 404 */
+export async function getCvById(cvId: string): Promise<CvAnalysisResponse | null> {
+  const id = encodeURIComponent(cvId);
+  try {
+    const res = await api.get<unknown>(`/cv/${id}`);
+    return normalizeCvDetailPayload(res.data, cvId);
+  } catch (e: unknown) {
+    const status = (e as { response?: { status?: number } })?.response?.status;
+    if (status !== 404) throw e;
+  }
+  try {
+    const res = await api.get<unknown>(`/cv/${id}/analysis`);
+    return normalizeCvDetailPayload(res.data, cvId);
+  } catch (e: unknown) {
+    const status = (e as { response?: { status?: number } })?.response?.status;
+    if (status === 404) return null;
+    throw e;
+  }
+}
+
+/** @deprecated Use getCvById */
+export const getCvAnalysis = getCvById;
+
+export async function deleteCv(cvId: string): Promise<void> {
+  await api.delete(`/cv/${encodeURIComponent(cvId)}`);
+}
+
 const CV_UPLOAD_TIMEOUT_MS = 600_000;
 const CV_UPLOAD_MAX_RETRIES = 2;
 const CV_UPLOAD_RETRY_DELAY_MS = 1500;
@@ -374,21 +486,69 @@ export async function searchCompanies(
   return [];
 }
 
+function extractLogoFromVectorImage(vector: unknown): string | undefined {
+  if (!vector || typeof vector !== "object") return undefined;
+  const v = vector as { rootUrl?: string; artifacts?: Array<{ fileIdentifyingUrlPathSegment?: string }> };
+  const rootUrl = typeof v.rootUrl === "string" ? v.rootUrl : "";
+  const artifacts = Array.isArray(v.artifacts) ? v.artifacts : [];
+  if (!rootUrl || artifacts.length === 0) return undefined;
+  const last = artifacts[artifacts.length - 1];
+  const seg = last?.fileIdentifyingUrlPathSegment;
+  if (typeof seg === "string" && seg) return rootUrl + seg;
+  return undefined;
+}
+
+function findLogoInLinkedInNode(node: unknown, depth = 0): string | undefined {
+  if (!node || typeof node !== "object" || depth > 6) return undefined;
+  const n = node as Record<string, unknown>;
+
+  const direct =
+    extractLogoFromVectorImage(n.vectorImage) ??
+    extractLogoFromVectorImage((n.logoResolutionResult as { vectorImage?: unknown })?.vectorImage) ??
+    extractLogoFromVectorImage((n.image as { vectorImage?: unknown })?.vectorImage);
+
+  if (direct) return direct;
+
+  const lockup = n.entityLockupView as Record<string, unknown> | undefined;
+  if (lockup) {
+    const fromLockup =
+      extractLogoFromVectorImage((lockup.image as { vectorImage?: unknown })?.vectorImage) ??
+      findLogoInLinkedInNode(lockup.image, depth + 1);
+    if (fromLockup) return fromLockup;
+  }
+
+  if (n.view) {
+    const fromView = findLogoInLinkedInNode(n.view, depth + 1);
+    if (fromView) return fromView;
+  }
+
+  return undefined;
+}
+
 function normalizeCompanySearchItem(raw: unknown): CompanySearchItem | null {
   if (!raw || typeof raw !== "object") return null;
-  const r = raw as any;
+  const r = raw as Record<string, unknown>;
 
   const id =
-    String(r.id ?? r.company_id ?? r.companyId ?? r.organizationId ?? r.urn ?? r.universal_name ?? r.universalName ?? r.name ?? "")
-      .trim() || "";
+    String(
+      r.id ??
+        r.company_id ??
+        r.companyId ??
+        r.organizationId ??
+        r.urn ??
+        r.universal_name ??
+        r.universalName ??
+        r.name ??
+        "",
+    ).trim() || "";
 
   const name = String(r.name ?? r.company_name ?? r.companyName ?? r.title ?? r.displayName ?? "").trim();
   if (!name) return null;
 
-  const universal_name = String(r.universal_name ?? r.universalName ?? r.slug ?? r.publicIdentifier ?? "").trim() || undefined;
+  const universal_name =
+    String(r.universal_name ?? r.universalName ?? r.slug ?? r.publicIdentifier ?? "").trim() || undefined;
   const industry = String(r.industry ?? r.category ?? r.headline ?? r.subtitle ?? "").trim() || undefined;
 
-  // Logo: desteklenen olası alan isimleri + LinkedIn vectorImage formatı
   let logo_url: string | undefined =
     (typeof r.logo_url === "string" && r.logo_url) ||
     (typeof r.logoUrl === "string" && r.logoUrl) ||
@@ -397,19 +557,17 @@ function normalizeCompanySearchItem(raw: unknown): CompanySearchItem | null {
     (typeof r.imageUrl === "string" && r.imageUrl) ||
     undefined;
 
-  const vector = r.logoResolutionResult?.vectorImage ?? r.vectorImage ?? r.logo?.vectorImage;
-  if (!logo_url && vector && typeof vector === "object") {
-    const rootUrl = typeof vector.rootUrl === "string" ? vector.rootUrl : "";
-    const artifacts = Array.isArray(vector.artifacts) ? vector.artifacts : [];
-    const seg = artifacts?.[0]?.fileIdentifyingUrlPathSegment;
-    if (rootUrl && typeof seg === "string" && seg) logo_url = rootUrl + seg;
+  if (!logo_url) {
+    logo_url =
+      extractLogoFromVectorImage((r.logoResolutionResult as { vectorImage?: unknown })?.vectorImage) ??
+      extractLogoFromVectorImage(r.vectorImage) ??
+      findLogoInLinkedInNode(r);
   }
 
-  // Bazı backend’ler relative URL döndürebilir → base ile birleştirme yapmıyoruz (CDN olabilir).
-  // Sadece boşlukları temizle.
   if (logo_url) logo_url = String(logo_url).trim();
 
-  const entity_type = String(r.entity_type ?? r.entityType ?? r.type ?? "").trim() || undefined;
+  const entity_type =
+    String(r.entity_type ?? r.entityType ?? (typeof r.type === "string" ? r.type : "") ?? "").trim() || undefined;
 
   return {
     id,

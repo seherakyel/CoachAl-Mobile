@@ -4,6 +4,7 @@ import type { BottomTabBarProps } from "@react-navigation/bottom-tabs";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { DashboardScreen } from "../screens/DashboardScreen";
 import { CvAnalysisScreen } from "../screens/CvAnalysisScreen";
+import { CvParsedResultScreen } from "../screens/CvParsedResultScreen";
 import { AlignmentResultScreen } from "../screens/AlignmentResultScreen";
 import { InterviewHubScreen } from "../screens/InterviewHubScreen";
 import { ClassicInterviewScreen } from "../screens/ClassicInterviewScreen";
@@ -34,6 +35,7 @@ function AnalyzeNavigator() {
   return (
     <AnalyzeStack.Navigator>
       <AnalyzeStack.Screen name="CvAnalysisHome" component={CvAnalysisScreen} options={{ headerShown: false }} />
+      <AnalyzeStack.Screen name="CvParsedResult" component={CvParsedResultScreen} options={{ headerShown: false }} />
       <AnalyzeStack.Screen name="AlignmentResult" component={AlignmentResultScreen} options={{ headerShown: false }} />
     </AnalyzeStack.Navigator>
   );
@@ -71,7 +73,7 @@ function MainTabs() {
       <Tab.Screen name="CvAnalysis" component={AnalyzeNavigator} options={{ tabBarLabel: "CV Analizi" }} />
       <Tab.Screen name="Interviews" component={InterviewNavigator} options={{ tabBarLabel: "Mülakatlar" }} />
       <Tab.Screen name="Reports" component={ReportsNavigator} options={{ tabBarLabel: "Raporlar" }} />
-      <Tab.Screen name="Settings" component={SettingsScreen} options={{ tabBarLabel: "Ayarlar" }} />
+      <Tab.Screen name="Settings" component={SettingsScreen} options={{ tabBarLabel: "Profil" }} />
     </Tab.Navigator>
   );
 }

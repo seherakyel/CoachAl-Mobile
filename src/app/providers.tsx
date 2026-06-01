@@ -3,6 +3,7 @@ import { MD3LightTheme, PaperProvider } from "react-native-paper";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import type { ReactNode } from "react";
 import { CoachColors } from "../theme/coachTheme";
+import { CoachDialogsProvider } from "../components/coach/CoachDialogs";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -39,7 +40,9 @@ export function AppProviders({ children }: { children: ReactNode }) {
   return (
     <SafeAreaProvider>
       <QueryClientProvider client={queryClient}>
-        <PaperProvider theme={paperTheme}>{children}</PaperProvider>
+        <PaperProvider theme={paperTheme}>
+          <CoachDialogsProvider>{children}</CoachDialogsProvider>
+        </PaperProvider>
       </QueryClientProvider>
     </SafeAreaProvider>
   );

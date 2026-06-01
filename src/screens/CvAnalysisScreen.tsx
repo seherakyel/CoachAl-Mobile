@@ -7,8 +7,9 @@ import {
   Platform,
   ActivityIndicator,
 } from "react-native";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useNavigation } from "@react-navigation/native";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useFocusEffect, useNavigation, useRoute } from "@react-navigation/native";
+import type { RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import {
   errorCodes,
@@ -22,21 +23,37 @@ import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityI
 import { CompanyAutocomplete } from "../components/CompanyAutocomplete";
 import { analyzeCompany, uploadCvPdf, type CompanySearchItem, type UploadProgress } from "../services/api";
 import { extractDetail } from "../services/apiClient";
+import {
+  CV_LIST_QUERY_KEY,
+  applyCvSelection,
+  cacheCvFromUpload,
+  cvAnalysisQueryKey,
+  fetchCvDetail,
+  fetchCvListWithMeta,
+  formatCvListItemSubtitle,
+  getMaxCvsFromList,
+  isAtCvLimit,
+  loadPersistedCvId,
+} from "../services/cvDocuments";
+import { coachToast } from "../components/coach/CoachDialogs";
+import { normalizeParsedData } from "../utils/cvAnalysisHelpers";
 import { usePipelineStore } from "../store/usePipelineStore";
 import { useAnalysisJobStore } from "../store/useAnalysisJobStore";
 import type { AnalyzeParamList } from "../app/navigationTypes";
 import { CoachAppBarTheme, CoachColors, CoachRadii, CoachShadow } from "../theme/coachTheme";
 
 type Nav = NativeStackNavigationProp<AnalyzeParamList>;
+type CvRoute = RouteProp<AnalyzeParamList, "CvAnalysisHome">;
 
 const PHASE_LABELS: Record<UploadProgress, string> = {
   uploading: "PDF sunucuya gönderiliyor…",
-  processing: "Yapay zeka CV'nizi analiz ediyor, bu biraz sürebilir…",
+  processing: "CV analiz ediliyor…",
   finalizing: "Sonuçlar hazırlanıyor…",
 };
 
 export function CvAnalysisScreen() {
   const navigation = useNavigation<Nav>();
+  const route = useRoute<CvRoute>();
   const qc = useQueryClient();
   const setCv = usePipelineStore((s) => s.setCv);
   const setCompanyProfile = usePipelineStore((s) => s.setCompany);
@@ -58,15 +75,89 @@ export function CvAnalysisScreen() {
   const [positionTitle, setPositionTitle] = useState("");
 
   const abortRef = useRef<AbortController | null>(null);
+  const [selectingCv, setSelectingCv] = useState(false);
+
+  const cvListQuery = useQuery({
+    queryKey: CV_LIST_QUERY_KEY,
+    queryFn: fetchCvListWithMeta,
+  });
+  const listMeta = cvListQuery.data ?? { items: [], cv_count: 0, max_cvs: 3 };
+  const savedCvs = listMeta.items;
+  const maxCvs = getMaxCvsFromList(listMeta);
+
+  useFocusEffect(
+    useCallback(() => {
+      void cvListQuery.refetch();
+    }, [cvListQuery.refetch]),
+  );
+
+  const applyCachedCvToUi = useCallback((cached: NonNullable<Awaited<ReturnType<typeof fetchCvDetail>>>) => {
+    const pd = normalizeParsedData(cached.parsed_data);
+    applyCvSelection(cached.cv_id, cached.file_name);
+    setCvIdLocal(cached.cv_id);
+    setFileName(cached.file_name);
+    setSkills(pd.skills);
+    setSummary((pd.summary ?? "").trim());
+    setMatchLogic((pd.match_score_logic ?? "").trim());
+    setShowUploadOk(true);
+    setStep2Unlocked(true);
+    qc.setQueryData(cvAnalysisQueryKey(cached.cv_id), cached);
+  }, [qc]);
+
+  const selectSavedCv = useCallback(
+    async (id: string, navigateToDetail = false) => {
+      setSelectingCv(true);
+      setGlobalError(null);
+      try {
+        const cached = await fetchCvDetail(id);
+        if (cached?.analysis_complete) {
+          applyCachedCvToUi(cached);
+          coachToast("Kayıtlı CV seçildi.", "success");
+          if (navigateToDetail) {
+            navigation.navigate("CvParsedResult", { cvId: cached.cv_id });
+          }
+          return;
+        }
+        const row = savedCvs.find((c) => c.cv_id === id);
+        applyCvSelection(id, row?.file_name ?? "CV");
+        setCvIdLocal(id);
+        setStep2Unlocked(true);
+        setShowUploadOk(true);
+        setFileName(row?.file_name ?? "CV");
+        coachToast("Kayıtlı analiz bulunamadı; yeni analiz için CV'yi yeniden yükleyin.", "info");
+      } catch (e) {
+        const msg = extractDetail(e);
+        setSnack(msg);
+        coachToast(msg, "error");
+      } finally {
+        setSelectingCv(false);
+      }
+    },
+    [applyCachedCvToUi, navigation, savedCvs],
+  );
+
+  const initialCvParam = route.params?.cvId;
+  useEffect(() => {
+    if (initialCvParam) {
+      void selectSavedCv(initialCvParam, false);
+    }
+  }, [initialCvParam, selectSavedCv]);
 
   useEffect(() => {
-    if (storeCvId && !cvId) {
-      setCvIdLocal(storeCvId);
-      setStep2Unlocked(true);
-      setShowUploadOk(true);
-      setFileName("Kayıtlı CV");
-    }
-  }, [storeCvId, cvId]);
+    if (initialCvParam || cvId) return;
+    if (!storeCvId) return;
+    void (async () => {
+      const persisted = await loadPersistedCvId();
+      if (persisted) {
+        await selectSavedCv(persisted, false);
+      } else {
+        setCvIdLocal(storeCvId);
+        setStep2Unlocked(true);
+        setShowUploadOk(true);
+        setFileName("Kayıtlı CV");
+      }
+    })();
+  }, [initialCvParam, cvId, storeCvId, selectSavedCv]);
 
   const uploadMut = useMutation({
     mutationFn: (form: FormData) => {
@@ -95,6 +186,13 @@ export function CvAnalysisScreen() {
 
   const pickAndUpload = async () => {
     try {
+      const list = await fetchCvListWithMeta();
+      if (isAtCvLimit(list)) {
+        const msg = `En fazla ${maxCvs} CV yükleyebilirsiniz. Profil → CV ve Dosyalar'dan silin.`;
+        setSnack(msg);
+        coachToast(msg, "error");
+        return;
+      }
       const [res] = await pick({ type: [types.pdf] });
       const fname = res.name ?? "cv.pdf";
       const [copy] = await keepLocalCopy({
@@ -130,6 +228,14 @@ export function CvAnalysisScreen() {
           setStep2Unlocked(true);
           setGlobalError(null);
           qc.invalidateQueries({ queryKey: ["dashboard"] });
+          qc.invalidateQueries({ queryKey: CV_LIST_QUERY_KEY });
+          cacheCvFromUpload(qc, data);
+          coachToast("CV analiz edildi.", "success");
+          navigation.navigate("CvParsedResult", {
+            cvId: data.cv_id,
+            fileName: fname,
+            fromUpload: true,
+          });
         },
       });
     } catch (e) {
@@ -162,7 +268,9 @@ export function CvAnalysisScreen() {
       resetForm();
     },
     onError: (e) => {
-      setGlobalError("Analiz başarısız: " + extractDetail(e));
+      const msg = "Analiz başarısız: " + extractDetail(e);
+      setGlobalError(msg);
+      coachToast(msg, "error");
     },
   });
 
@@ -208,6 +316,65 @@ export function CvAnalysisScreen() {
           {globalError ? (
             <View style={{ padding: 16, backgroundColor: CoachColors.errorContainer, borderRadius: CoachRadii.xl, borderWidth: 1, borderColor: "rgba(186,26,26,0.2)", marginBottom: 16 }}>
               <Text style={{ fontSize: 14, color: CoachColors.onErrorContainer }}>{globalError}</Text>
+            </View>
+          ) : null}
+
+          {savedCvs.length > 0 ? (
+            <View style={{ backgroundColor: CoachColors.surfaceContainerLowest, borderWidth: 1, borderColor: CoachColors.outlineVariant, borderRadius: CoachRadii.xl, padding: 20, marginBottom: 16, ...CoachShadow.card }}>
+              <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                <Text style={{ fontSize: 16, fontWeight: "600", color: CoachColors.onSurface }}>
+                  Daha önce yüklediğim CV&apos;ler ({listMeta.cv_count ?? savedCvs.length}/{maxCvs})
+                </Text>
+                <Pressable onPress={() => void cvListQuery.refetch()} hitSlop={8}>
+                  <MaterialCommunityIcons name="refresh" size={20} color={CoachColors.secondary} />
+                </Pressable>
+              </View>
+              <Text style={{ fontSize: 13, color: CoachColors.onSurfaceVariant, marginBottom: 12 }}>
+                Seçilen CV için Gemini tekrar çalıştırılmaz; hedef şirket analizine geçebilirsiniz.
+              </Text>
+              {savedCvs.map((cv) => (
+                <Pressable
+                  key={cv.cv_id}
+                  onPress={() => void selectSavedCv(cv.cv_id, false)}
+                  disabled={selectingCv || isUploading}
+                  style={({ pressed }) => ({
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 10,
+                    paddingVertical: 12,
+                    paddingHorizontal: 12,
+                    borderRadius: CoachRadii.md,
+                    borderWidth: 1,
+                    borderColor: cvId === cv.cv_id ? CoachColors.secondary : CoachColors.outlineVariant,
+                    marginBottom: 8,
+                    backgroundColor: pressed ? CoachColors.surfaceContainer : CoachColors.surfaceContainerLowest,
+                  })}
+                >
+                  <MaterialCommunityIcons
+                    name={cv.analysis_complete ? "check-circle" : "file-document-outline"}
+                    size={20}
+                    color={cv.analysis_complete ? CoachColors.emerald600 : CoachColors.secondary}
+                  />
+                  <View style={{ flex: 1, minWidth: 0 }}>
+                    <Text style={{ fontSize: 14, fontWeight: "500", color: CoachColors.onSurface }} numberOfLines={1}>
+                      {cv.file_name}
+                    </Text>
+                    <Text style={{ fontSize: 12, color: CoachColors.onSurfaceVariant }} numberOfLines={1}>
+                      {formatCvListItemSubtitle(cv)}
+                    </Text>
+                  </View>
+                  <Pressable
+                    onPress={() => navigation.navigate("CvParsedResult", { cvId: cv.cv_id })}
+                    hitSlop={8}
+                  >
+                    <MaterialCommunityIcons name="file-eye-outline" size={20} color={CoachColors.secondary} />
+                  </Pressable>
+                </Pressable>
+              ))}
+              {selectingCv ? <ActivityIndicator color={CoachColors.secondary} style={{ marginTop: 4 }} /> : null}
+              <Text style={{ fontSize: 13, color: CoachColors.onSurfaceVariant, textAlign: "center", marginTop: 8 }}>
+                veya yeni yükle
+              </Text>
             </View>
           ) : null}
 

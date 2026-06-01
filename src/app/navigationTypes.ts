@@ -1,5 +1,6 @@
 export type AnalyzeParamList = {
-  CvAnalysisHome: undefined;
+  CvAnalysisHome: { cvId?: string } | undefined;
+  CvParsedResult: { cvId: string; fileName?: string; fromUpload?: boolean };
   AlignmentResult: { resultId?: string } | undefined;
 };
 

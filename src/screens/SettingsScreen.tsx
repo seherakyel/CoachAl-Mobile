@@ -1,4 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useNavigation } from "@react-navigation/native";
+import type { CompositeNavigationProp } from "@react-navigation/native";
+import type { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import {
   View,
   ScrollView,
@@ -17,6 +21,13 @@ import { CoachHeader } from "../components/chrome/CoachHeader";
 import { CoachPalette } from "../theme/coachTheme";
 import { emailLogout, updateUserDisplayName, updateUserPassword } from "../services/firebaseAuth";
 import { useAuthStore } from "../store/useAuthStore";
+import { CvLibraryPanel } from "../components/cv/CvLibraryPanel";
+import type { AnalyzeParamList, MainTabParamList } from "../app/navigationTypes";
+
+type SettingsNav = CompositeNavigationProp<
+  BottomTabNavigationProp<MainTabParamList, "Settings">,
+  NativeStackNavigationProp<AnalyzeParamList>
+>;
 
 const APP_BLUE = CoachPalette.midnightIndigo;
 
@@ -69,6 +80,7 @@ const NAV: { id: SettingsSection; label: string; icon: string }[] = [
 ];
 
 export function SettingsScreen() {
+  const navigation = useNavigation<SettingsNav>();
   const qc = useQueryClient();
   const user = useAuthStore((s) => s.user);
   const email = user?.email ?? "";
@@ -178,8 +190,8 @@ export function SettingsScreen() {
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.pageTitle}>Ayarlar</Text>
-        <Text style={styles.pageSubtitle}>Hesap tercihlerinizi ve platform ayarlarınızı yönetin.</Text>
+        <Text style={styles.pageTitle}>Profil</Text>
+        <Text style={styles.pageSubtitle}>Hesap, CV dosyaları ve güvenlik ayarlarınızı yönetin.</Text>
 
         {msg ? (
           <View style={styles.banner}>
@@ -287,9 +299,26 @@ export function SettingsScreen() {
               <MaterialCommunityIcons name="file-document-outline" size={26} color={S.primary} />
               <Text style={styles.panelTitle}>CV ve Dosyalar</Text>
             </View>
-            <Text style={styles.placeholderText}>
-              CV ve ek dosyalarınızı buradan yönetebileceksiniz. Bu özellik mobil uygulamada yakında etkinleştirilecek.
-            </Text>
+            <CvLibraryPanel
+              onUploaded={(cvId, fileName) => {
+                navigation.navigate("CvAnalysis", {
+                  screen: "CvParsedResult",
+                  params: { cvId, fileName, fromUpload: true },
+                });
+              }}
+              onUseForAnalysis={(cvId) => {
+                navigation.navigate("CvAnalysis", {
+                  screen: "CvAnalysisHome",
+                  params: { cvId },
+                });
+              }}
+              onViewDetail={(cvId) => {
+                navigation.navigate("CvAnalysis", {
+                  screen: "CvParsedResult",
+                  params: { cvId },
+                });
+              }}
+            />
           </View>
         ) : null}
 
