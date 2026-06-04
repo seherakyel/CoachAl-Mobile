@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { View, ScrollView } from "react-native";
+import { View } from "react-native";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { RouteProp } from "@react-navigation/native";
@@ -59,26 +59,29 @@ export function InterviewAlignmentSetupScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: CoachColors.background }}>
       <CoachScreenBar title={title} onBack={() => navigation.goBack()} />
-      <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 48 }}>
+      <View style={{ flex: 1, padding: 20, paddingBottom: 24 }}>
         <CoachPageTitle title={title} subtitle={subtitle} />
-        <CoachCard>
-          <Text style={[CoachTypography.labelSm, { color: CoachColors.onSurface, marginBottom: 8 }]}>
-            Geçmiş analiz
-          </Text>
-          <AlignmentPickerPanel
-            selectedId={selected ? alignmentIdOf(selected) : null}
-            onSelect={setSelected}
-            limit={30}
-          />
+        <CoachCard style={{ flex: 1, justifyContent: "space-between" }}>
+          <View>
+            <Text style={[CoachTypography.labelSm, { color: CoachColors.onSurface, marginBottom: 8 }]}>
+              Geçmiş analiz
+            </Text>
+            <AlignmentPickerPanel
+              selectedId={selected ? alignmentIdOf(selected) : null}
+              onSelect={setSelected}
+              limit={30}
+              placeholder="Geçmiş analiz seçin…"
+            />
+          </View>
           <CoachPrimaryButton
             label={mode === "quiz" ? "Quizi Başlat" : "Sınavı Başlat"}
             icon={mode === "quiz" ? "timer" : "play"}
             onPress={start}
             disabled={!selected}
-            style={{ marginTop: 20 }}
+            style={{ marginTop: 16 }}
           />
         </CoachCard>
-      </ScrollView>
+      </View>
       <Snackbar visible={!!snack} onDismiss={() => setSnack(null)} duration={4000}>
         {snack ?? ""}
       </Snackbar>
