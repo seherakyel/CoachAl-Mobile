@@ -84,7 +84,11 @@ export function ClassicInterviewScreen() {
     bootRef.current = true;
     setPhase("loading");
     if (alignmentId) {
-      start.mutate({ alignment_id: alignmentId });
+      start.mutate({
+        alignment_id: alignmentId,
+        cv_id: cvId ?? undefined,
+        profile_id: profileId ?? undefined,
+      });
     } else {
       start.mutate({ cv_id: cvId!, profile_id: profileId! });
     }

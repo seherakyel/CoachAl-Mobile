@@ -13,7 +13,13 @@ import {
   StyleSheet,
   Platform,
   ActivityIndicator,
+  LayoutAnimation,
+  UIManager,
 } from "react-native";
+
+if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
+}
 import { useQueryClient } from "@tanstack/react-query";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
@@ -85,7 +91,12 @@ export function SettingsScreen() {
   const user = useAuthStore((s) => s.user);
   const email = user?.email ?? "";
 
-  const [active, setActive] = useState<SettingsSection>("profile");
+  const [expanded, setExpanded] = useState<SettingsSection | null>(null);
+
+  const toggleSection = (id: SettingsSection) => {
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    setExpanded((prev) => (prev === id ? null : id));
+  };
   const [hydrated, setHydrated] = useState(false);
 
   const [displayName, setDisplayName] = useState(user?.displayName ?? "");
@@ -182,82 +193,11 @@ export function SettingsScreen() {
     setSaving(false);
   };
 
-  return (
-    <View style={styles.screen}>
-      <CoachHeader />
-      <ScrollView
-        contentContainerStyle={styles.scroll}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
-      >
-        <Text style={styles.pageTitle}>Profil</Text>
-        <Text style={styles.pageSubtitle}>Hesap, CV dosyaları ve güvenlik ayarlarınızı yönetin.</Text>
-
-        {msg ? (
-          <View style={styles.banner}>
-            <MaterialCommunityIcons name="check-circle-outline" size={22} color={S.primary} />
-            <Text style={styles.bannerText}>{msg}</Text>
-          </View>
-        ) : null}
-
-        {/* Profil özeti */}
-        <View style={[styles.card, cardShadow]}>
-          <View style={styles.avatarWrap}>
-            <View style={styles.avatar}>
-              <Text style={styles.avatarLetter}>{initial}</Text>
-            </View>
-          </View>
-          <Text style={styles.profileName}>{showName}</Text>
-          <Text style={styles.profileRole}>{roleTitle.trim() || "Ünvan ekleyin"}</Text>
-        </View>
-
-        {/* Bölüm seçici — seçili: şeffaf zemin + sol ince mavi çizgi; ikon/metin gri */}
-        <View style={[styles.navCard, cardShadow]}>
-          {NAV.map((item) => {
-            const selected = active === item.id;
-            return (
-              <Pressable
-                key={item.id}
-                onPress={() => setActive(item.id)}
-                android_ripple={{ color: "rgba(56, 95, 140, 0.12)" }}
-                style={({ pressed }) => [
-                  styles.navRow,
-                  selected && styles.navRowSelected,
-                  !selected && pressed && styles.navRowPressed,
-                ]}
-              >
-                <MaterialCommunityIcons
-                  name={item.icon}
-                  size={22}
-                  color={S.onSurfaceVariant}
-                />
-                <Text style={styles.navLabel}>{item.label}</Text>
-              </Pressable>
-            );
-          })}
-          <View style={styles.navDivider} />
-          <Pressable
-            onPress={async () => {
-              await emailLogout();
-              qc.clear();
-            }}
-            android_ripple={{ color: "rgba(186,26,26,0.12)" }}
-            style={({ pressed }) => [styles.navRow, styles.navRowLogout, pressed && styles.navRowLogoutPressed]}
-            accessibilityLabel="Çıkış Yap"
-            accessibilityRole="button"
-          >
-            <MaterialCommunityIcons name="logout" size={22} color={S.error} />
-            <Text style={styles.navLabelLogout}>Çıkış Yap</Text>
-          </Pressable>
-        </View>
-
-        {/* İçerik panelleri */}
-        {active === "profile" ? (
-          <View style={[styles.panel, cardShadow]}>
-            <View style={styles.panelHead}>
-              <MaterialCommunityIcons name="account" size={26} color={S.primary} />
-              <Text style={styles.panelTitle}>Profil Yönetimi</Text>
-            </View>
+  const renderSectionContent = (section: SettingsSection) => {
+    switch (section) {
+      case "profile":
+        return (
+          <>
             <Field label="Ad Soyad" value={displayName} onChangeText={setDisplayName} placeholder="Adınız Soyadınız" />
             <Field label="E-posta Adresi" value={email} editable={false} />
             <Field label="Ünvan / Rol" value={roleTitle} onChangeText={setRoleTitle} placeholder="Örn. Senior Technical Recruiter" />
@@ -290,44 +230,34 @@ export function SettingsScreen() {
                 )}
               </Pressable>
             </View>
-          </View>
-        ) : null}
-
-        {active === "files" ? (
-          <View style={[styles.panel, cardShadow]}>
-            <View style={styles.panelHead}>
-              <MaterialCommunityIcons name="file-document-outline" size={26} color={S.primary} />
-              <Text style={styles.panelTitle}>CV ve Dosyalar</Text>
-            </View>
-            <CvLibraryPanel
-              onUploaded={(cvId, fileName) => {
-                navigation.navigate("CvAnalysis", {
-                  screen: "CvParsedResult",
-                  params: { cvId, fileName, fromUpload: true },
-                });
-              }}
-              onUseForAnalysis={(cvId) => {
-                navigation.navigate("CvAnalysis", {
-                  screen: "CvAnalysisHome",
-                  params: { cvId },
-                });
-              }}
-              onViewDetail={(cvId) => {
-                navigation.navigate("CvAnalysis", {
-                  screen: "CvParsedResult",
-                  params: { cvId },
-                });
-              }}
-            />
-          </View>
-        ) : null}
-
-        {active === "notifications" ? (
-          <View style={[styles.panel, cardShadow]}>
-            <View style={styles.panelHead}>
-              <MaterialCommunityIcons name="bell-ring-outline" size={26} color={S.primary} />
-              <Text style={styles.panelTitle}>Bildirim Tercihleri</Text>
-            </View>
+          </>
+        );
+      case "files":
+        return (
+          <CvLibraryPanel
+            onUploaded={(cvId, fileName) => {
+              navigation.navigate("CvAnalysis", {
+                screen: "CvParsedResult",
+                params: { cvId, fileName, fromUpload: true },
+              });
+            }}
+            onUseForAnalysis={(cvId) => {
+              navigation.navigate("CvAnalysis", {
+                screen: "CvAnalysisHome",
+                params: { cvId },
+              });
+            }}
+            onViewDetail={(cvId) => {
+              navigation.navigate("CvAnalysis", {
+                screen: "CvParsedResult",
+                params: { cvId },
+              });
+            }}
+          />
+        );
+      case "notifications":
+        return (
+          <>
             <ToggleRow
               title="E-posta Bildirimleri"
               subtitle="Haftalık raporlar ve sistem güncellemeleri"
@@ -356,15 +286,11 @@ export function SettingsScreen() {
               }}
               last
             />
-          </View>
-        ) : null}
-
-        {active === "security" ? (
-          <View style={[styles.panel, cardShadow]}>
-            <View style={styles.panelHead}>
-              <MaterialCommunityIcons name="shield-lock-outline" size={26} color={S.primary} />
-              <Text style={styles.panelTitle}>Hesap ve Güvenlik</Text>
-            </View>
+          </>
+        );
+      case "security":
+        return (
+          <>
             <Text style={styles.secHint}>Şifrenizi güncellemek için yeni şifrenizi girin (en az 6 karakter).</Text>
             <Field label="Yeni Şifre" value={newPassword} onChangeText={setNewPassword} placeholder="••••••••" secure />
             {pwError ? (
@@ -399,8 +325,86 @@ export function SettingsScreen() {
                 <Text style={styles.btnPrimaryText}>Şifreyi Güncelle</Text>
               )}
             </Pressable>
+          </>
+        );
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <View style={styles.screen}>
+      <CoachHeader />
+      <ScrollView
+        contentContainerStyle={styles.scroll}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
+        <Text style={styles.pageTitle}>Profil</Text>
+        <Text style={styles.pageSubtitle}>Hesap, CV dosyaları ve güvenlik ayarlarınızı yönetin.</Text>
+
+        {msg ? (
+          <View style={styles.banner}>
+            <MaterialCommunityIcons name="check-circle-outline" size={22} color={S.primary} />
+            <Text style={styles.bannerText}>{msg}</Text>
           </View>
         ) : null}
+
+        {/* Profil özeti */}
+        <View style={[styles.card, cardShadow]}>
+          <View style={styles.avatarWrap}>
+            <View style={styles.avatar}>
+              <Text style={styles.avatarLetter}>{initial}</Text>
+            </View>
+          </View>
+          <Text style={styles.profileName}>{showName}</Text>
+          <Text style={styles.profileRole}>{roleTitle.trim() || "Ünvan ekleyin"}</Text>
+        </View>
+
+        <View style={[styles.navCard, cardShadow]}>
+          {NAV.map((item) => {
+            const isOpen = expanded === item.id;
+            return (
+              <View key={item.id}>
+                <Pressable
+                  onPress={() => toggleSection(item.id)}
+                  android_ripple={{ color: "rgba(56, 95, 140, 0.12)" }}
+                  accessibilityRole="button"
+                  accessibilityState={{ expanded: isOpen }}
+                  accessibilityLabel={item.label}
+                  style={({ pressed }) => [
+                    styles.navRow,
+                    isOpen && styles.navRowExpanded,
+                    !isOpen && pressed && styles.navRowPressed,
+                  ]}
+                >
+                  <MaterialCommunityIcons name={item.icon} size={22} color={isOpen ? S.primary : S.onSurfaceVariant} />
+                  <Text style={[styles.navLabel, isOpen && styles.navLabelExpanded]}>{item.label}</Text>
+                  <MaterialCommunityIcons
+                    name={isOpen ? "chevron-up" : "chevron-down"}
+                    size={22}
+                    color={S.onSurfaceVariant}
+                  />
+                </Pressable>
+                {isOpen ? <View style={styles.accordionBody}>{renderSectionContent(item.id)}</View> : null}
+              </View>
+            );
+          })}
+          <View style={styles.navDivider} />
+          <Pressable
+            onPress={async () => {
+              await emailLogout();
+              qc.clear();
+            }}
+            android_ripple={{ color: "rgba(186,26,26,0.12)" }}
+            style={({ pressed }) => [styles.navRow, styles.navRowLogout, pressed && styles.navRowLogoutPressed]}
+            accessibilityLabel="Çıkış Yap"
+            accessibilityRole="button"
+          >
+            <MaterialCommunityIcons name="logout" size={22} color={S.error} />
+            <Text style={styles.navLabelLogout}>Çıkış Yap</Text>
+          </Pressable>
+        </View>
 
       </ScrollView>
     </View>
@@ -564,14 +568,27 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     borderRadius: 14,
   },
-  navRowSelected: {
-    backgroundColor: "transparent",
+  navRowExpanded: {
+    backgroundColor: S.primaryFixed,
     borderLeftWidth: 3,
     borderLeftColor: S.primary,
     paddingLeft: 11,
   },
   navRowPressed: {
     backgroundColor: "rgba(255,255,255,0.7)",
+  },
+  navLabelExpanded: {
+    color: S.onSurface,
+    fontWeight: "600",
+  },
+  accordionBody: {
+    gap: 16,
+    paddingHorizontal: 14,
+    paddingTop: 12,
+    paddingBottom: 16,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: S.outlineVariant,
+    backgroundColor: S.surfaceBright,
   },
   navDivider: {
     height: StyleSheet.hairlineWidth,
@@ -587,6 +604,7 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255,218,214,0.35)",
   },
   navLabel: {
+    flex: 1,
     fontSize: 15,
     color: S.onSurfaceVariant,
     fontWeight: "500",
@@ -597,30 +615,6 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: S.error,
     letterSpacing: -0.2,
-  },
-  panel: {
-    backgroundColor: S.surfaceLowest,
-    borderRadius: CARD_RADIUS,
-    borderWidth: 1,
-    borderColor: S.surfaceHighest,
-    padding: 24,
-    marginBottom: 20,
-    gap: 16,
-  },
-  panelHead: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    paddingBottom: 16,
-    marginBottom: 4,
-    borderBottomWidth: 1,
-    borderBottomColor: S.surfaceHighest,
-  },
-  panelTitle: {
-    fontSize: 22,
-    fontWeight: "700",
-    color: S.onSurface,
-    letterSpacing: -0.3,
   },
   fieldBlock: { gap: 8 },
   label: {
