@@ -3,13 +3,18 @@ import { useQuery } from "@tanstack/react-query";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import type { RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { Appbar, Card, Text } from "react-native-paper";
+import { Text } from "react-native-paper";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 import { getInterviewSession } from "../services/api";
 import type { InterviewSessionQuestionRow } from "../services/api";
 import type { ReportsParamList } from "../app/navigationTypes";
+import { CoachScreenBar } from "../components/chrome/CoachScreenBar";
+import { CoachCard } from "../components/ui/CoachCard";
+import { CoachLoadingPanel } from "../components/ui/CoachLoadingPanel";
 import { formatSessionDate, scoreTextColor } from "../utils/sessionLabels";
-import { CoachAppBarTheme, CoachColors, CoachRadii } from "../theme/coachTheme";
+import { CoachColors, CoachRadii } from "../theme/coachTheme";
+import { CoachTypography } from "../theme/coachTypography";
+import { WebTokens } from "../theme/webTokens";
 
 type Nav = NativeStackNavigationProp<ReportsParamList>;
 type R = RouteProp<ReportsParamList, "ExamSessionDetail">;
@@ -25,66 +30,60 @@ function QuestionBlock({ row, index, mode }: { row: InterviewSessionQuestionRow;
     const cor =
       row.correct_index != null && opts[row.correct_index] != null ? opts[row.correct_index] : "—";
     return (
-      <Card
-        mode="outlined"
+      <CoachCard
         style={{
           marginBottom: 12,
-          borderColor: ok ? "#a7f3d0" : "#fecaca",
-          backgroundColor: ok ? "rgba(236, 253, 245, 0.5)" : "rgba(254, 242, 242, 0.5)",
+          borderColor: ok ? WebTokens.scoreEmerald : WebTokens.scoreRed,
+          backgroundColor: ok ? "rgba(5, 150, 105, 0.06)" : "rgba(220, 38, 38, 0.06)",
         }}
       >
-        <Card.Content>
-          <View style={{ flexDirection: "row", gap: 8, marginBottom: 8 }}>
-            <MaterialCommunityIcons
-              name={ok ? "check-circle" : "close-circle"}
-              size={22}
-              color={ok ? "#059669" : "#dc2626"}
-            />
-            <Text style={{ flex: 1, fontSize: 14, fontWeight: "600", color: CoachColors.onSurface }}>
-              {index + 1}. {row.question}
-              {row.difficulty ? ` (${row.difficulty})` : ""}
-            </Text>
-          </View>
-          <Text style={{ fontSize: 13, color: CoachColors.onSurfaceVariant }}>Seçiminiz: {sel}</Text>
-          <Text style={{ fontSize: 13, color: CoachColors.onSurfaceVariant, marginTop: 4 }}>
-            Doğru: {cor}
+        <View style={{ flexDirection: "row", gap: 8, marginBottom: 8 }}>
+          <MaterialCommunityIcons
+            name={ok ? "check-circle" : "close-circle"}
+            size={22}
+            color={ok ? WebTokens.scoreEmerald : WebTokens.scoreRed}
+          />
+          <Text style={[CoachTypography.labelSm, { flex: 1, fontWeight: "600", color: CoachColors.onSurface }]}>
+            {index + 1}. {row.question}
+            {row.difficulty ? ` (${row.difficulty})` : ""}
           </Text>
-          {row.explanation ? (
-            <Text style={{ fontSize: 12, color: CoachColors.onSurfaceVariant, marginTop: 8, fontStyle: "italic" }}>
-              {row.explanation}
-            </Text>
-          ) : null}
-        </Card.Content>
-      </Card>
+        </View>
+        <Text style={[CoachTypography.bodyMd, { color: CoachColors.onSurfaceVariant }]}>Seçiminiz: {sel}</Text>
+        <Text style={[CoachTypography.bodyMd, { color: CoachColors.onSurfaceVariant, marginTop: 4 }]}>
+          Doğru: {cor}
+        </Text>
+        {row.explanation ? (
+          <Text style={[CoachTypography.caption, { marginTop: 8, fontStyle: "italic", color: CoachColors.onSurfaceVariant }]}>
+            {row.explanation}
+          </Text>
+        ) : null}
+      </CoachCard>
     );
   }
 
   const weak = row.score != null && row.score < 60;
   return (
-    <Card
-      mode="outlined"
+    <CoachCard
       style={{
         marginBottom: 12,
-        borderColor: weak ? "#fecaca" : CoachColors.outlineVariant,
-        backgroundColor: weak ? "rgba(254, 242, 242, 0.35)" : CoachColors.surfaceContainerLowest,
+        borderColor: weak ? WebTokens.scoreRed : CoachColors.outlineVariant,
+        backgroundColor: weak ? "rgba(220, 38, 38, 0.04)" : CoachColors.surfaceContainerLowest,
       }}
     >
-      <Card.Content>
-        <Text style={{ fontSize: 14, fontWeight: "600", color: CoachColors.onSurface, marginBottom: 8 }}>
-          {index + 1}. {row.question}
-          {row.difficulty ? ` (${row.difficulty})` : ""}
+      <Text style={[CoachTypography.labelSm, { fontWeight: "600", color: CoachColors.onSurface, marginBottom: 8 }]}>
+        {index + 1}. {row.question}
+        {row.difficulty ? ` (${row.difficulty})` : ""}
+      </Text>
+      <Text style={[CoachTypography.bodyMd, { color: CoachColors.onSurfaceVariant }]}>Cevap: {row.answer || "—"}</Text>
+      {row.score != null ? (
+        <Text style={[CoachTypography.labelSm, { marginTop: 6, fontWeight: "600", color: scoreTextColor(row.score) }]}>
+          Puan: %{Math.round(Number(row.score))}
         </Text>
-        <Text style={{ fontSize: 13, color: CoachColors.onSurfaceVariant }}>Cevap: {row.answer || "—"}</Text>
-        {row.score != null ? (
-          <Text style={{ fontSize: 13, fontWeight: "600", marginTop: 6, color: scoreTextColor(row.score) }}>
-            Puan: %{Math.round(Number(row.score))}
-          </Text>
-        ) : null}
-        {row.feedback ? (
-          <Text style={{ fontSize: 12, color: CoachColors.onSurfaceVariant, marginTop: 8 }}>{row.feedback}</Text>
-        ) : null}
-      </Card.Content>
-    </Card>
+      ) : null}
+      {row.feedback ? (
+        <Text style={[CoachTypography.caption, { marginTop: 8, color: CoachColors.onSurfaceVariant }]}>{row.feedback}</Text>
+      ) : null}
+    </CoachCard>
   );
 }
 
@@ -104,44 +103,28 @@ export function ExamSessionDetailScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: CoachColors.background }}>
-      <Appbar.Header elevated style={{ backgroundColor: CoachColors.componentSurface }} theme={CoachAppBarTheme}>
-        <Appbar.BackAction onPress={() => navigation.goBack()} />
-        <Appbar.Content
-          title={d?.mode_label || "Sınav detayı"}
-          titleStyle={{ color: CoachColors.onComponentSurface }}
-        />
-      </Appbar.Header>
+      <CoachScreenBar
+        title={d?.mode_label || "Sınav detayı"}
+        onBack={() => navigation.goBack()}
+      />
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 48 }}>
-        {q.isLoading ? <Text>Yükleniyor…</Text> : null}
+        {q.isLoading ? <CoachLoadingPanel message="Detaylar yükleniyor…" /> : null}
         {q.isError ? <Text style={{ color: CoachColors.error }}>Detay yüklenemedi.</Text> : null}
-        {d ? (
+        {d && !q.isLoading ? (
           <>
-            <View
-              style={{
-                padding: 16,
-                borderRadius: CoachRadii.xl,
-                backgroundColor: CoachColors.surfaceContainerLow,
-                borderWidth: 1,
-                borderColor: CoachColors.outlineVariant,
-                marginBottom: 16,
-              }}
-            >
-              <Text style={{ fontSize: 13, color: CoachColors.onSurfaceVariant }}>
-                {(d.cv_name || "CV") +
-                  " · " +
-                  (d.company_name || "") +
-                  " · " +
-                  (d.position || "")}
+            <CoachCard style={{ marginBottom: 16 }}>
+              <Text style={[CoachTypography.bodyMd, { color: CoachColors.onSurfaceVariant }]}>
+                {(d.cv_name || "CV") + " · " + (d.company_name || "") + " · " + (d.position || "")}
               </Text>
-              <Text style={{ fontSize: 12, color: CoachColors.onSurfaceVariant, marginTop: 6 }}>
+              <Text style={[CoachTypography.caption, { color: CoachColors.onSurfaceVariant, marginTop: 6 }]}>
                 Eşleşme:{" "}
                 {d.alignment_score != null ? `%${Math.round(Number(d.alignment_score))}` : "—"} · Sınav:{" "}
                 {d.total_score != null ? `%${Math.round(Number(d.total_score))}` : "—"} ·{" "}
                 {formatSessionDate(d.completed_at || d.started_at)}
               </Text>
-            </View>
+            </CoachCard>
             {(d.feedback_full || d.feedback) ? (
-              <Text style={{ fontSize: 14, lineHeight: 22, color: CoachColors.onSurface, marginBottom: 16 }}>
+              <Text style={[CoachTypography.bodyMd, { color: CoachColors.onSurface, marginBottom: 16, lineHeight: 22 }]}>
                 {d.feedback_full || d.feedback}
               </Text>
             ) : null}

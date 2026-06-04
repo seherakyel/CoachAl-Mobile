@@ -34,7 +34,7 @@ function renderCoachTabBar(props: BottomTabBarProps) {
 
 function AnalyzeNavigator() {
   return (
-    <AnalyzeStack.Navigator>
+    <AnalyzeStack.Navigator screenOptions={{ headerShown: false }}>
       <AnalyzeStack.Screen name="CvAnalysisHome" component={CvAnalysisScreen} options={{ headerShown: false }} />
       <AnalyzeStack.Screen name="CvParsedResult" component={CvParsedResultScreen} options={{ headerShown: false }} />
       <AnalyzeStack.Screen name="AlignmentResult" component={AlignmentResultScreen} options={{ headerShown: false }} />
@@ -44,23 +44,19 @@ function AnalyzeNavigator() {
 
 function InterviewNavigator() {
   return (
-    <InterviewStack.Navigator>
-      <InterviewStack.Screen name="InterviewHub" component={InterviewHubScreen} options={{ headerShown: false }} />
-      <InterviewStack.Screen
-        name="InterviewAlignmentSetup"
-        component={InterviewAlignmentSetupScreen}
-        options={{ title: "Kurulum" }}
-      />
-      <InterviewStack.Screen name="ClassicInterview" component={ClassicInterviewScreen} options={{ title: "Klasik sınav" }} />
-      <InterviewStack.Screen name="QuizInterview" component={QuizInterviewScreen} options={{ title: "Teknik quiz" }} />
-      <InterviewStack.Screen name="InterviewOutcome" component={InterviewOutcomeScreen} options={{ title: "Sonuç" }} />
+    <InterviewStack.Navigator screenOptions={{ headerShown: false }}>
+      <InterviewStack.Screen name="InterviewHub" component={InterviewHubScreen} />
+      <InterviewStack.Screen name="InterviewAlignmentSetup" component={InterviewAlignmentSetupScreen} />
+      <InterviewStack.Screen name="ClassicInterview" component={ClassicInterviewScreen} />
+      <InterviewStack.Screen name="QuizInterview" component={QuizInterviewScreen} />
+      <InterviewStack.Screen name="InterviewOutcome" component={InterviewOutcomeScreen} />
     </InterviewStack.Navigator>
   );
 }
 
 function ReportsNavigator() {
   return (
-    <ReportsStack.Navigator>
+    <ReportsStack.Navigator screenOptions={{ headerShown: false }}>
       <ReportsStack.Screen name="ReportsHub" component={ReportsHubScreen} options={{ headerShown: false }} />
       <ReportsStack.Screen name="ExamSessionDetail" component={ExamSessionDetailScreen} options={{ headerShown: false }} />
     </ReportsStack.Navigator>

@@ -29,7 +29,7 @@ type SettingsNav = CompositeNavigationProp<
   NativeStackNavigationProp<AnalyzeParamList>
 >;
 
-const APP_BLUE = CoachPalette.midnightIndigo;
+const APP_BLUE = CoachPalette.primary;
 
 /** Ayarlar — AppBar (#385F8C) ile uyumlu mavi-beyaz palet; mor yok */
 const S = {

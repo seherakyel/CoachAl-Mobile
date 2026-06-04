@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { View, ScrollView } from "react-native";
+import { View, ScrollView, Pressable } from "react-native";
 import { useMutation } from "@tanstack/react-query";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { RouteProp } from "@react-navigation/native";
-import { Appbar, Button, Card, Snackbar, Text } from "react-native-paper";
+import { Snackbar, Text } from "react-native-paper";
 import { startQuizInterview, submitQuizInterview } from "../services/api";
 import type { QuizQuestion } from "../services/api";
 import { extractDetail } from "../services/apiClient";
@@ -12,10 +12,17 @@ import { InterviewTimer } from "../components/InterviewTimer";
 import { usePipelineStore } from "../store/usePipelineStore";
 import { useInterviewStore } from "../store/useInterviewStore";
 import type { InterviewParamList } from "../app/navigationTypes";
-import { CoachAppBarTheme, CoachColors } from "../theme/coachTheme";
-
+import { CoachScreenBar } from "../components/chrome/CoachScreenBar";
+import { CoachCard } from "../components/ui/CoachCard";
+import { CoachPrimaryButton } from "../components/ui/CoachPrimaryButton";
+import { CoachLoadingPanel } from "../components/ui/CoachLoadingPanel";
+import { CoachColors, CoachRadii } from "../theme/coachTheme";
+import { CoachTypography } from "../theme/coachTypography";
+import { scoreTextColor } from "../utils/sessionLabels";
 type Nav = NativeStackNavigationProp<InterviewParamList>;
 type R = RouteProp<InterviewParamList, "QuizInterview">;
+
+type Phase = "loading" | "quiz" | "result";
 
 export function QuizInterviewScreen() {
   const navigation = useNavigation<Nav>();
@@ -23,14 +30,22 @@ export function QuizInterviewScreen() {
   const alignmentId = route.params.alignmentId;
   const cvId = usePipelineStore((s) => s.cvId);
   const profileId = usePipelineStore((s) => s.profileId);
+
+  const [phase, setPhase] = useState<Phase>("loading");
   const [snack, setSnack] = useState<string | null>(null);
   const [sessionId, setSessionId] = useState<string | null>(null);
+  const [subtitle, setSubtitle] = useState("—");
   const [seconds, setSeconds] = useState(60);
   const [questions, setQuestions] = useState<QuizQuestion[]>([]);
   const [idx, setIdx] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
   const [locked, setLocked] = useState(false);
   const [answers, setAnswers] = useState<Record<number, number | null>>({});
+  const [quizResult, setQuizResult] = useState<{
+    total_score: number;
+    correct_count: number;
+    total_questions: number;
+  } | null>(null);
   const bootRef = useRef(false);
 
   const start = useMutation({
@@ -39,10 +54,12 @@ export function QuizInterviewScreen() {
       setSessionId(d.session_id);
       setQuestions(d.questions ?? []);
       setSeconds(d.seconds_per_question ?? 60);
+      setSubtitle([d.company_name, d.position].filter(Boolean).join(" · ") || "—");
       setIdx(0);
       setSelected(null);
       setLocked(false);
       setAnswers({});
+      setPhase("quiz");
     },
     onError: (e) => setSnack(extractDetail(e)),
   });
@@ -51,7 +68,12 @@ export function QuizInterviewScreen() {
     mutationFn: submitQuizInterview,
     onSuccess: (d) => {
       useInterviewStore.getState().setQuizOutcome(d.session_id, d);
-      navigation.replace("InterviewOutcome");
+      setQuizResult({
+        total_score: d.total_score,
+        correct_count: d.correct_count,
+        total_questions: d.total_questions,
+      });
+      setPhase("result");
     },
     onError: (e) => setSnack(extractDetail(e)),
   });
@@ -72,16 +94,17 @@ export function QuizInterviewScreen() {
 
   const submitFinal = (map: Record<number, number | null>) => {
     if (!sessionId) return;
-    const payload = questions.map((q) => ({
-      question_index: q.index,
-      selected_index: map[q.index] ?? null,
+    const payload = questions.map((q, i) => ({
+      question_index: q.index ?? i,
+      selected_index: map[q.index ?? i] ?? null,
     }));
     submit.mutate({ session_id: sessionId, answers: payload });
   };
 
   const goNext = () => {
     if (!current) return;
-    const nextMap = { ...answers, [current.index]: selected ?? null };
+    const qIdx = current.index ?? idx;
+    const nextMap = { ...answers, [qIdx]: selected ?? null };
     setAnswers(nextMap);
     if (idx < total - 1) {
       setIdx((x) => x + 1);
@@ -92,66 +115,115 @@ export function QuizInterviewScreen() {
     }
   };
 
+  const openReport = () => {
+    if (!sessionId) return;
+    const parent = navigation.getParent() as { navigate: (name: string, params?: object) => void } | undefined;
+    parent?.navigate("Reports", { screen: "ExamSessionDetail", params: { sessionId } });
+  };
+
   return (
     <View style={{ flex: 1, backgroundColor: CoachColors.background }}>
-      <Appbar.Header elevated style={{ backgroundColor: CoachColors.componentSurface }} theme={CoachAppBarTheme}>
-        <Appbar.BackAction onPress={() => navigation.goBack()} />
-        <Appbar.Content title="Quiz mülakat" titleStyle={{ color: CoachColors.onComponentSurface }} />
-      </Appbar.Header>
-      <ScrollView contentContainerStyle={{ padding: 12 }}>
-        {start.isPending ? <Text>Yükleniyor…</Text> : null}
-        {current ? (
-          <Card mode="outlined">
-            <Card.Content>
-              <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-                <Text variant="labelLarge" style={{ opacity: 0.7 }}>
-                  Soru {idx + 1} / {total}
-                </Text>
-                <InterviewTimer
-                  key={`${sessionId}-${idx}`}
-                  secondsTotal={seconds}
-                  active={!locked && !submit.isPending}
-                  onExpire={() => setLocked(true)}
-                />
-              </View>
-              <Text variant="titleMedium" style={{ marginTop: 10, fontWeight: "700" }}>
-                {current.question}
+      <CoachScreenBar title="Teknik Quiz" subtitle={phase === "quiz" ? subtitle : undefined} onBack={() => navigation.goBack()} />
+
+      {phase === "loading" || start.isPending ? <CoachLoadingPanel message="AI soruları oluşturuyor…" /> : null}
+
+      {phase === "quiz" && current ? (
+        <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 48 }}>
+          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+            <View>
+              <Text style={[CoachTypography.h2, { color: CoachColors.onSurface }]}>Teknik Quiz</Text>
+              <Text style={[CoachTypography.bodyMd, { color: CoachColors.onSurfaceVariant, marginTop: 4 }]}>
+                Soru {idx + 1} / {total}
               </Text>
-              <View style={{ marginTop: 12, gap: 8 }}>
-                {(current.options ?? []).map((opt, oi) => {
-                  const disabled = locked;
-                  const selectedNow = selected === oi;
-                  return (
-                    <Button
-                      key={`${current.index}-${oi}`}
-                      mode={selectedNow ? "contained" : "outlined"}
-                      disabled={disabled}
-                      onPress={() => setSelected(oi)}
+            </View>
+            <InterviewTimer
+              key={`${sessionId}-${idx}`}
+              secondsTotal={seconds}
+              active={!locked && !submit.isPending}
+              onExpire={() => setLocked(true)}
+            />
+          </View>
+
+          <CoachCard>
+            <Text style={[CoachTypography.bodyLg, { color: CoachColors.onSurface, fontWeight: "600", marginBottom: 16 }]}>
+              {current.question}
+            </Text>
+            <View style={{ gap: 10 }}>
+              {(current.options ?? []).map((opt, oi) => {
+                const selectedNow = selected === oi;
+                return (
+                  <Pressable
+                    key={`${current.index}-${oi}`}
+                    disabled={locked}
+                    onPress={() => setSelected(oi)}
+                    style={{
+                      paddingVertical: 14,
+                      paddingHorizontal: 16,
+                      borderRadius: CoachRadii.lg,
+                      borderWidth: 1,
+                      borderColor: selectedNow ? CoachColors.primary : CoachColors.outlineVariant,
+                      backgroundColor: selectedNow ? CoachColors.primaryFixed : CoachColors.surfaceContainerLow,
+                    }}
+                  >
+                    <Text
+                      style={{
+                        fontSize: 15,
+                        color: selectedNow ? CoachColors.primary : CoachColors.onSurface,
+                        fontWeight: selectedNow ? "600" : "400",
+                      }}
                     >
                       {opt}
-                    </Button>
-                  );
-                })}
-              </View>
-              <Button
-                mode="contained-tonal"
-                style={{ marginTop: 14 }}
-                loading={submit.isPending}
-                onPress={() => goNext()}
-              >
-                {idx < total - 1 ? "Sonraki" : "Gönder"}
-              </Button>
-              {locked ? (
-                <Text variant="bodySmall" style={{ marginTop: 10, opacity: 0.75 }}>
-                  Süre doldu. Seçim yapılmadıysa boş gönderilir.
-                </Text>
-              ) : null}
-            </Card.Content>
-          </Card>
-        ) : (
-          !start.isPending ? <Text>Soru bulunamadı</Text> : null
-        )}
-      </ScrollView>
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+            {locked ? (
+              <Text style={[CoachTypography.caption, { color: CoachColors.onSurfaceVariant, marginTop: 12 }]}>
+                Süre doldu. Seçim yapılmadıysa boş gönderilir.
+              </Text>
+            ) : null}
+            <CoachPrimaryButton
+              label={idx < total - 1 ? "Sonraki" : "Gönder"}
+              onPress={goNext}
+              loading={submit.isPending}
+              style={{ marginTop: 16 }}
+            />
+          </CoachCard>
+        </ScrollView>
+      ) : null}
+
+      {phase === "result" && quizResult ? (
+        <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 48 }}>
+          <CoachCard>
+            <Text style={[CoachTypography.h2, { color: CoachColors.onSurface, textAlign: "center" }]}>Quiz Tamamlandı</Text>
+            <Text
+              style={{
+                textAlign: "center",
+                fontSize: 32,
+                fontWeight: "700",
+                color: scoreTextColor(quizResult.total_score),
+                marginVertical: 12,
+              }}
+            >
+              %{Math.round(quizResult.total_score)}
+            </Text>
+            <Text style={[CoachTypography.bodyMd, { textAlign: "center", color: CoachColors.onSurfaceVariant }]}>
+              Doğru: {quizResult.correct_count} / {quizResult.total_questions}
+            </Text>
+          </CoachCard>
+          <View style={{ flexDirection: "row", gap: 12, marginTop: 20 }}>
+            <CoachPrimaryButton
+              label="Yeniden dene"
+              variant="outline"
+              onPress={() => navigation.navigate("InterviewHub")}
+              style={{ flex: 1 }}
+            />
+            <CoachPrimaryButton label="Raporu Gör" onPress={openReport} style={{ flex: 1 }} />
+          </View>
+        </ScrollView>
+      ) : null}
+
       <Snackbar visible={!!snack} onDismiss={() => setSnack(null)} duration={7000}>
         {snack ?? ""}
       </Snackbar>

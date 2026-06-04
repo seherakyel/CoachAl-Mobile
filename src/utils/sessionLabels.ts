@@ -1,5 +1,5 @@
 import type { AlignmentListItem } from "../services/api";
-import { CoachColors } from "../theme/coachTheme";
+import { WebTokens } from "../theme/webTokens";
 
 export function formatSessionDate(iso?: string | null): string {
   if (!iso) return "—";
@@ -29,11 +29,11 @@ export function alignmentIdOf(a: AlignmentListItem): string {
 }
 
 export function scoreTextColor(score: number | null | undefined): string {
-  if (score == null) return CoachColors.onSurfaceVariant;
+  if (score == null) return WebTokens.onSurfaceVariant;
   const n = Number(score);
-  if (n >= 80) return "#059669";
-  if (n >= 60) return "#d97706";
-  return "#dc2626";
+  if (n >= 80) return WebTokens.scoreEmerald;
+  if (n >= 60) return WebTokens.scoreAmber;
+  return WebTokens.scoreRed;
 }
 
 export function sessionModeIcon(mode?: string): string {

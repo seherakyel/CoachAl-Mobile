@@ -18,7 +18,7 @@ import {
   pick,
   types,
 } from "@react-native-documents/picker";
-import { Appbar, Button, Snackbar, Text, TextInput } from "react-native-paper";
+import { Button, Snackbar, Text, TextInput } from "react-native-paper";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 import { CompanyAutocomplete } from "../components/CompanyAutocomplete";
 import { analyzeCompany, uploadCvPdf, type CompanySearchItem, type UploadProgress } from "../services/api";
@@ -40,7 +40,8 @@ import { normalizeParsedData } from "../utils/cvAnalysisHelpers";
 import { usePipelineStore } from "../store/usePipelineStore";
 import { useAnalysisJobStore } from "../store/useAnalysisJobStore";
 import type { AnalyzeParamList } from "../app/navigationTypes";
-import { CoachAppBarTheme, CoachColors, CoachRadii, CoachShadow } from "../theme/coachTheme";
+import { CoachScreenBar } from "../components/chrome/CoachScreenBar";
+import { CoachColors, CoachRadii, CoachShadow } from "../theme/coachTheme";
 
 type Nav = NativeStackNavigationProp<AnalyzeParamList>;
 type CvRoute = RouteProp<AnalyzeParamList, "CvAnalysisHome">;
@@ -301,10 +302,10 @@ export function CvAnalysisScreen() {
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
       <View style={{ flex: 1, backgroundColor: CoachColors.background }}>
-        <Appbar.Header elevated style={{ backgroundColor: CoachColors.componentSurface }} theme={CoachAppBarTheme}>
-          {navigation.canGoBack() ? <Appbar.BackAction onPress={() => navigation.goBack()} /> : null}
-          <Appbar.Content title="CV Analizi" titleStyle={{ fontWeight: "700", color: CoachColors.onComponentSurface }} />
-        </Appbar.Header>
+        <CoachScreenBar
+          title="CV Analizi"
+          onBack={navigation.canGoBack() ? () => navigation.goBack() : undefined}
+        />
         <ScrollView contentContainerStyle={{ padding: 24, paddingBottom: 120, maxWidth: 800, alignSelf: "center", width: "100%" }}>
           <Text style={{ fontSize: 30, fontWeight: "600", color: CoachColors.onSurface, marginBottom: 8 }}>
             Yeni Bir Analiz Başlat

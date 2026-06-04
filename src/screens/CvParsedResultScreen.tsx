@@ -1,13 +1,14 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { View, ScrollView, StyleSheet } from "react-native";
-import { Appbar, Text, ActivityIndicator, Button } from "react-native-paper";
+import { Text, ActivityIndicator, Button } from "react-native-paper";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import type { RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { getCvById, type CvAnalysisResponse } from "../services/api";
 import { extractDetail } from "../services/apiClient";
 import type { AnalyzeParamList } from "../app/navigationTypes";
-import { CoachAppBarTheme, CoachColors, CoachRadii } from "../theme/coachTheme";
+import { CoachScreenBar } from "../components/chrome/CoachScreenBar";
+import { CoachColors, CoachRadii } from "../theme/coachTheme";
 import { normalizeParsedData } from "../utils/cvAnalysisHelpers";
 import { usePipelineStore } from "../store/usePipelineStore";
 
@@ -37,10 +38,7 @@ export function CvParsedResultScreen() {
 
   return (
     <View style={styles.flex}>
-      <Appbar.Header elevated style={{ backgroundColor: CoachColors.componentSurface }} theme={CoachAppBarTheme}>
-        <Appbar.BackAction onPress={() => navigation.goBack()} />
-        <Appbar.Content title="CV Analiz Sonucu" titleStyle={{ color: CoachColors.onComponentSurface }} />
-      </Appbar.Header>
+      <CoachScreenBar title="CV Analiz Sonucu" onBack={() => navigation.goBack()} />
 
       {q.isLoading ? (
         <View style={styles.center}>

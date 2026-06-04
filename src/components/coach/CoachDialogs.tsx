@@ -2,7 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useState, type React
 import { Portal, Dialog, Button, Text, Snackbar } from "react-native-paper";
 import { CoachPalette } from "../../theme/coachTheme";
 
-const APP_BLUE = CoachPalette.midnightIndigo;
+const APP_BLUE = CoachPalette.primary;
 
 type ToastVariant = "success" | "error" | "info";
 

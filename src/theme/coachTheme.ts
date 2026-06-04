@@ -1,23 +1,10 @@
 /**
- * CoachAI — görsel palet: açık yüzey #E9E9E9 + lacivert #385F8C
+ * CoachAI mobile theme — aligned with web Tailwind tokens.
  */
+import { WebTokens as W } from "./webTokens";
 
-export const CoachPalette = {
-  midnightIndigo: "#385F8C",
-  vanillaCream: "#E9E9E9",
-  /** Kartlar — zeminden daha açık, tam beyaz değil */
-  surfaceCard: "#F7F7F7",
-  subtleBorder: "#D2D2D2",
-  /** İkincil / basılı birincil — navy ile krem arası köprü */
-  softIndigo: "#6A86A8",
-  ghostText: "#6E7182",
-  mutedGold: "#C5A059",
-  /** Birincil buton koyulaştırma */
-  primaryButtonShade: "#2E5075",
-} as const;
-
-const CREAM = { r: 233, g: 233, b: 233 }; // #E9E9E9
-const DEEP = { r: 56, g: 95, b: 140 }; // #385F8C
+const CREAM = { r: 252, g: 248, b: 255 };
+const DEEP = { r: 53, g: 37, b: 205 };
 
 export function coachMix(t: number): string {
   const x = Math.max(0, Math.min(1, t));
@@ -27,87 +14,83 @@ export function coachMix(t: number): string {
   return `#${[r, g, b].map((n) => n.toString(16).padStart(2, "0")).join("")}`;
 }
 
-const P = CoachPalette;
+export const CoachPalette = {
+  primary: W.primary,
+  primaryContainer: W.primaryContainer,
+  onPrimary: W.onPrimary,
+  onPrimaryContainer: W.onPrimaryContainer,
+  primaryFixed: W.primaryFixed,
+  primaryFixedDim: W.primaryFixedDim,
+  secondary: W.secondary,
+  onSecondary: W.onSecondary,
+  secondaryContainer: W.secondaryContainer,
+  error: W.error,
+  onError: W.onError,
+  errorContainer: W.errorContainer,
+  onErrorContainer: W.onErrorContainer,
+  background: W.background,
+  onBackground: W.onBackground,
+  surface: W.surface,
+  surfaceContainerLowest: W.surfaceContainerLowest,
+  surfaceContainerLow: W.surfaceContainerLow,
+  surfaceContainer: W.surfaceContainer,
+  surfaceContainerHigh: W.surfaceContainerHigh,
+  surfaceContainerHighest: W.surfaceContainerHighest,
+  onSurface: W.onSurface,
+  onSurfaceVariant: W.onSurfaceVariant,
+  surfaceVariant: W.surfaceVariant,
+  outline: W.outline,
+  outlineVariant: W.outlineVariant,
+} as const;
 
 export const CoachColors = {
-  cream: P.vanillaCream,
-  deep: P.midnightIndigo,
+  ...CoachPalette,
 
-  background: P.vanillaCream,
-  onBackground: P.midnightIndigo,
-  surface: P.vanillaCream,
+  /** Legacy alias — header/chrome uses white bar like web ui.js */
+  componentSurface: W.surfaceContainerLowest,
+  onComponentSurface: W.onSurface,
 
-  surfaceCard: P.surfaceCard,
-  surfaceContainerLowest: P.surfaceCard,
-  surfaceContainerLow: "#F1F1F1",
-  surfaceContainer: "#EBEBEB",
-  surfaceContainerHigh: "#E4E4E4",
-  surfaceContainerHighest: "#DDDDDD",
-  surfaceVariant: P.subtleBorder,
+  surfaceCard: W.surfaceContainerLowest,
+  ghostText: W.onSurfaceVariant,
+  secondaryText: W.onSurfaceVariant,
 
-  onSurface: P.midnightIndigo,
-  onSurfaceVariant: P.ghostText,
-  secondaryText: P.ghostText,
-  ghostText: P.ghostText,
+  primaryPressed: W.primary,
+  primaryButtonShade: W.primary,
 
-  outline: coachMix(0.28),
-  outlineVariant: P.subtleBorder,
+  onPrimaryMuted: "rgba(255, 255, 255, 0.88)",
 
-  primary: P.midnightIndigo,
-  primaryContainer: P.midnightIndigo,
-  onPrimary: P.vanillaCream,
-  primaryPressed: P.softIndigo,
-  primaryButtonShade: P.primaryButtonShade,
+  tabBarBackground: W.surfaceContainerLowest,
+  tabActivePill: "rgba(53, 37, 205, 0.12)",
+  tabActiveBackground: "rgba(53, 37, 205, 0.12)",
+  tabInactiveForeground: W.onSurfaceVariant,
+  tabActiveForeground: W.primary,
 
-  onPrimaryMuted: "rgba(233, 233, 233, 0.82)",
-  onPrimaryContainer: P.ghostText,
-  primaryFixed: "rgba(56, 95, 140, 0.12)",
-  primaryFixedDim: "rgba(56, 95, 140, 0.18)",
+  accent: W.primaryContainer,
+  accentMuted: "rgba(79, 70, 229, 0.14)",
+  insightChipBg: W.primaryFixed,
 
-  softIndigo: P.softIndigo,
-  secondary: P.softIndigo,
-  secondaryContainer: P.softIndigo,
-  onSecondary: P.vanillaCream,
+  shadowIndigo: "rgba(53, 37, 205, 0.08)",
 
-  componentSurface: P.midnightIndigo,
-  onComponentSurface: P.vanillaCream,
+  emerald50: "rgba(5, 150, 105, 0.12)",
+  emerald200: "#a7f3d0",
+  emerald400: "#059669",
+  emerald600: "#059669",
+  emerald700: "#059669",
+  amber50: "rgba(217, 119, 6, 0.12)",
+  amber400: "#d97706",
+  amber600: "#d97706",
+  amber700: "#d97706",
+  slate100: W.outlineVariant,
+  slate200: W.outlineVariant,
+  slate300: W.outline,
+  slate500: W.onSurfaceVariant,
+  indigo400: W.primaryContainer,
+  red50: "rgba(220, 38, 38, 0.08)",
+  red200: "#fecaca",
+  red600: "#dc2626",
+  red700: "#dc2626",
 
-  tabBarBackground: P.vanillaCream,
-  tabActivePill: "rgba(56, 95, 140, 0.14)",
-  tabActiveBackground: "rgba(56, 95, 140, 0.14)",
-  tabInactiveForeground: P.ghostText,
-  tabActiveForeground: P.midnightIndigo,
-
-  accent: P.mutedGold,
-  accentMuted: "rgba(197, 160, 89, 0.18)",
-  successGreen: P.mutedGold,
-  insightChipBg: "rgba(197, 160, 89, 0.14)",
-
-  error: P.midnightIndigo,
-  onError: P.vanillaCream,
-  errorContainer: "rgba(56, 95, 140, 0.06)",
-  onErrorContainer: P.midnightIndigo,
-
-  shadowIndigo: "rgba(56, 95, 140, 0.08)",
-
-  emerald50: "rgba(197, 160, 89, 0.12)",
-  emerald200: P.subtleBorder,
-  emerald400: P.mutedGold,
-  emerald600: P.mutedGold,
-  emerald700: P.midnightIndigo,
-  amber50: coachMix(0.08),
-  amber400: P.mutedGold,
-  amber600: P.softIndigo,
-  amber700: P.midnightIndigo,
-  slate100: P.subtleBorder,
-  slate200: P.subtleBorder,
-  slate300: coachMix(0.25),
-  slate500: P.ghostText,
-  indigo400: P.softIndigo,
-  red50: coachMix(0.06),
-  red200: P.subtleBorder,
-  red600: P.midnightIndigo,
-  red700: P.midnightIndigo,
+  headerBorder: "rgba(226, 232, 240, 0.9)",
 } as const;
 
 export const CoachRadii = {
@@ -120,14 +103,14 @@ export const CoachRadii = {
 
 export const CoachShadow = {
   card: {
-    shadowColor: P.midnightIndigo,
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.08,
-    shadowRadius: 14,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.04,
+    shadowRadius: 24,
     elevation: 2,
   },
   elevated: {
-    shadowColor: P.midnightIndigo,
+    shadowColor: W.primary,
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.1,
     shadowRadius: 20,
@@ -136,19 +119,19 @@ export const CoachShadow = {
 } as const;
 
 export const CoachGlass = {
-  backgroundColor: "rgba(247, 247, 247, 0.94)",
+  backgroundColor: "rgba(255, 255, 255, 0.94)",
   borderWidth: 1,
-  borderColor: P.subtleBorder,
+  borderColor: W.outlineVariant,
 } as const;
 
 export const CoachAppBarTheme = {
   colors: {
-    primary: P.vanillaCream,
-    onSurface: P.vanillaCream,
-    surface: P.midnightIndigo,
+    primary: W.onSurface,
+    onSurface: W.onSurface,
+    surface: W.surfaceContainerLowest,
     elevation: {
-      level2: P.midnightIndigo,
-      level3: P.midnightIndigo,
+      level2: W.surfaceContainerLowest,
+      level3: W.surfaceContainerLowest,
     },
   },
 };

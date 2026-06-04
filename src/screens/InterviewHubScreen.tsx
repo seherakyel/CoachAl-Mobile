@@ -10,7 +10,11 @@ import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityI
 import { listCompletedInterviews } from "../services/api";
 import { formatSessionDate, scoreTextColor, sessionModeIcon } from "../utils/sessionLabels";
 import type { InterviewParamList, MainTabParamList } from "../app/navigationTypes";
-import { CoachColors, CoachRadii, CoachShadow, CoachGlass } from "../theme/coachTheme";
+import { CoachPageTitle } from "../components/ui/CoachPageTitle";
+import { CoachPrimaryButton } from "../components/ui/CoachPrimaryButton";
+import { CoachCard } from "../components/ui/CoachCard";
+import { CoachColors, CoachRadii, CoachShadow } from "../theme/coachTheme";
+import { CoachTypography } from "../theme/coachTypography";
 
 type Nav = CompositeNavigationProp<
   NativeStackNavigationProp<InterviewParamList, "InterviewHub">,
@@ -29,23 +33,13 @@ export function InterviewHubScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: CoachColors.background }}>
       <ScrollView contentContainerStyle={{ padding: 24, paddingBottom: 120, maxWidth: 1024, width: "100%", alignSelf: "center" }}>
-        <Text style={{ fontSize: 30, fontWeight: "700", letterSpacing: -0.5, color: CoachColors.primary, marginBottom: 8 }}>
-          Mülakat hazırlığı
-        </Text>
-        <Text style={{ fontSize: 17, lineHeight: 26, color: CoachColors.onSurfaceVariant, marginBottom: 32 }}>
-          Geçmiş hizalama analizlerinizden birini seçerek sınav veya quiz başlatın.
-        </Text>
+        <CoachPageTitle
+          title="Mülakat Modu Seçimi"
+          subtitle="Pratik yapmak istediğiniz mülakat formatını seçin."
+        />
 
         <View style={{ gap: 24 }}>
-          <View
-            style={{
-              ...CoachGlass,
-              borderRadius: CoachRadii.xl,
-              padding: 24,
-              ...CoachShadow.card,
-              overflow: "hidden",
-            }}
-          >
+          <CoachCard style={{ overflow: "hidden" }}>
             <View
               style={{
                 position: "absolute",
@@ -54,7 +48,7 @@ export function InterviewHubScreen() {
                 width: 128,
                 height: 128,
                 borderBottomLeftRadius: 128,
-                backgroundColor: "rgba(0, 88, 190, 0.06)",
+                backgroundColor: "rgba(53, 37, 205, 0.06)",
               }}
             />
             <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 12 }}>
@@ -66,7 +60,7 @@ export function InterviewHubScreen() {
                   backgroundColor: CoachColors.insightChipBg,
                 }}
               >
-                <Text style={{ fontSize: 10, fontWeight: "700", color: CoachColors.secondary, letterSpacing: 0.4 }}>
+                <Text style={{ fontSize: 10, fontWeight: "700", color: CoachColors.primary, letterSpacing: 0.4 }}>
                   YAPAY ZEKA DESTEKLİ
                 </Text>
               </View>
@@ -82,11 +76,9 @@ export function InterviewHubScreen() {
                 marginBottom: 16,
               }}
             >
-              <MaterialCommunityIcons name="head-lightbulb-outline" size={28} color={CoachColors.secondary} />
+              <MaterialCommunityIcons name="code-tags" size={28} color={CoachColors.primary} />
             </View>
-            <Text style={{ fontSize: 22, fontWeight: "600", color: CoachColors.primary, marginBottom: 8 }}>
-              Klasik teknik mülakat
-            </Text>
+            <Text style={[CoachTypography.h3, { color: CoachColors.onSurface, marginBottom: 8 }]}>Klasik Sınav</Text>
             <Text style={{ fontSize: 15, lineHeight: 22, color: CoachColors.onSurfaceVariant, marginBottom: 16, flexGrow: 1 }}>
               Yazılım mühendisliği temelleri, sistem tasarımı ve problem çözme odaklı kapsamlı oturum.
             </Text>
@@ -100,29 +92,13 @@ export function InterviewHubScreen() {
                 <Text style={{ fontSize: 13, color: CoachColors.onSurfaceVariant }}>Orta / zor</Text>
               </View>
             </View>
-            <Pressable
+            <CoachPrimaryButton
+              label="Başla"
               onPress={() => navigation.navigate("InterviewAlignmentSetup", { mode: "classic" })}
-              style={{
-                backgroundColor: CoachColors.primary,
-                paddingVertical: 14,
-                borderRadius: CoachRadii.lg,
-                alignItems: "center",
-                ...CoachShadow.elevated,
-              }}
-            >
-              <Text style={{ fontSize: 15, fontWeight: "600", color: CoachColors.onPrimary }}>Pratiğe başla</Text>
-            </Pressable>
-          </View>
+            />
+          </CoachCard>
 
-          <View
-            style={{
-              ...CoachGlass,
-              borderRadius: CoachRadii.xl,
-              padding: 24,
-              ...CoachShadow.card,
-              overflow: "hidden",
-            }}
-          >
+          <CoachCard style={{ overflow: "hidden" }}>
             <View
               style={{
                 position: "absolute",
@@ -159,9 +135,9 @@ export function InterviewHubScreen() {
                 marginBottom: 16,
               }}
             >
-              <MaterialCommunityIcons name="timer-outline" size={28} color={CoachColors.secondary} />
+              <MaterialCommunityIcons name="timer-outline" size={28} color={CoachColors.primary} />
             </View>
-            <Text style={{ fontSize: 22, fontWeight: "600", color: CoachColors.primary, marginBottom: 8 }}>Teknik quiz</Text>
+            <Text style={[CoachTypography.h3, { color: CoachColors.onSurface, marginBottom: 8 }]}>Teknik Quiz</Text>
             <Text style={{ fontSize: 15, lineHeight: 22, color: CoachColors.onSurfaceVariant, marginBottom: 16 }}>
               Çoktan seçmeli hızlı soru seti; temel kavramları ölçer.
             </Text>
@@ -175,20 +151,12 @@ export function InterviewHubScreen() {
                 <Text style={{ fontSize: 13, color: CoachColors.onSurfaceVariant }}>Kolay / orta</Text>
               </View>
             </View>
-            <Pressable
+            <CoachPrimaryButton
+              label="Başla"
+              variant="outline"
               onPress={() => navigation.navigate("InterviewAlignmentSetup", { mode: "quiz" })}
-              style={{
-                backgroundColor: CoachColors.surfaceContainerLowest,
-                borderWidth: 1,
-                borderColor: CoachColors.outlineVariant,
-                paddingVertical: 14,
-                borderRadius: CoachRadii.lg,
-                alignItems: "center",
-              }}
-            >
-              <Text style={{ fontSize: 15, fontWeight: "600", color: CoachColors.primary }}>Quiz&apos;e başla</Text>
-            </Pressable>
-          </View>
+            />
+          </CoachCard>
 
           <View
             style={{

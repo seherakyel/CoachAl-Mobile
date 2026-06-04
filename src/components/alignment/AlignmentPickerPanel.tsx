@@ -6,6 +6,7 @@ import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityI
 import { listAlignments, type AlignmentListItem } from "../../services/api";
 import { alignmentIdOf, alignmentOptionLabel, formatSessionDate } from "../../utils/sessionLabels";
 import { CoachColors, CoachRadii } from "../../theme/coachTheme";
+import { CoachTypography } from "../../theme/coachTypography";
 
 type Props = {
   selectedId: string | null;
@@ -35,21 +36,21 @@ export function AlignmentPickerPanel({
     return (
       <View style={{ paddingVertical: 24, alignItems: "center" }}>
         <ActivityIndicator color={CoachColors.primary} />
-        <Text style={{ marginTop: 12, color: CoachColors.onSurfaceVariant }}>Analizler yükleniyor…</Text>
+        <Text style={[CoachTypography.bodyMd, { marginTop: 12, color: CoachColors.onSurfaceVariant }]}>
+          Analizler yükleniyor…
+        </Text>
       </View>
     );
   }
 
   if (q.isError) {
     return (
-      <Text style={{ color: CoachColors.error, fontSize: 14 }}>
-        Liste yüklenemedi. Lütfen tekrar deneyin.
-      </Text>
+      <Text style={{ color: CoachColors.error, fontSize: 14 }}>Liste yüklenemedi. Lütfen tekrar deneyin.</Text>
     );
   }
 
   if (!items.length) {
-    return <Text style={{ fontSize: 14, color: CoachColors.onSurfaceVariant }}>{emptyMessage}</Text>;
+    return <Text style={[CoachTypography.bodyMd, { color: CoachColors.onSurfaceVariant }]}>{emptyMessage}</Text>;
   }
 
   return (
@@ -66,7 +67,7 @@ export function AlignmentPickerPanel({
               borderColor: active ? CoachColors.primary : CoachColors.outlineVariant,
               borderRadius: CoachRadii.lg,
               padding: 14,
-              backgroundColor: active ? CoachColors.primaryFixed : CoachColors.surfaceContainerLowest,
+              backgroundColor: active ? CoachColors.primaryFixed : CoachColors.surfaceContainerLow,
             }}
           >
             <View style={{ flexDirection: "row", gap: 12, alignItems: "flex-start" }}>
@@ -83,11 +84,14 @@ export function AlignmentPickerPanel({
                 <MaterialCommunityIcons name="chart-timeline-variant" size={22} color={CoachColors.primary} />
               </View>
               <View style={{ flex: 1, minWidth: 0 }}>
-                <Text style={{ fontSize: 14, fontWeight: "600", color: CoachColors.onSurface }} numberOfLines={2}>
+                <Text
+                  style={[CoachTypography.labelSm, { fontWeight: "600", color: CoachColors.onSurface }]}
+                  numberOfLines={2}
+                >
                   {alignmentOptionLabel(it)}
                 </Text>
                 {it.created_at ? (
-                  <Text style={{ fontSize: 11, color: CoachColors.onSurfaceVariant, marginTop: 4 }}>
+                  <Text style={[CoachTypography.caption, { color: CoachColors.onSurfaceVariant, marginTop: 4 }]}>
                     {formatSessionDate(it.created_at)}
                   </Text>
                 ) : null}
@@ -113,13 +117,18 @@ export function AlignmentPickerPanel({
             backgroundColor: CoachColors.surfaceContainerLow,
           }}
         >
-          <Text style={{ fontSize: 12, fontWeight: "600", color: CoachColors.onSurfaceVariant, marginBottom: 8 }}>
+          <Text style={[CoachTypography.caption, { fontWeight: "600", color: CoachColors.onSurfaceVariant, marginBottom: 8 }]}>
             Seçili analiz
           </Text>
-          <Text style={{ fontSize: 14, color: CoachColors.onSurface }}>{alignmentOptionLabel(selected)}</Text>
+          <Text style={[CoachTypography.bodyMd, { color: CoachColors.onSurface }]}>{alignmentOptionLabel(selected)}</Text>
           {selected.risk_level ? (
-            <Text style={{ fontSize: 12, color: CoachColors.onSurfaceVariant, marginTop: 6 }}>
+            <Text style={[CoachTypography.caption, { color: CoachColors.onSurfaceVariant, marginTop: 6 }]}>
               Risk: {selected.risk_level}
+            </Text>
+          ) : null}
+          {selected.score != null ? (
+            <Text style={[CoachTypography.labelSm, { color: CoachColors.primary, marginTop: 4, fontWeight: "600" }]}>
+              Eşleşme: %{Math.round(Number(selected.score))}
             </Text>
           ) : null}
         </View>

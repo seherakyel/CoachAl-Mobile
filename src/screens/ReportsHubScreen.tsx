@@ -3,16 +3,21 @@ import { View, ScrollView, Pressable, ActivityIndicator } from "react-native";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { Appbar, Button, Text } from "react-native-paper";
+import { Text } from "react-native-paper";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 import { listCompletedInterviews, type CompletedSessionListItem } from "../services/api";
 import type { ReportsParamList } from "../app/navigationTypes";
+import { CoachScreenBar } from "../components/chrome/CoachScreenBar";
+import { CoachPageTitle } from "../components/ui/CoachPageTitle";
+import { CoachCard } from "../components/ui/CoachCard";
+import { CoachPrimaryButton } from "../components/ui/CoachPrimaryButton";
 import {
   formatSessionDate,
   scoreTextColor,
   sessionModeIcon,
 } from "../utils/sessionLabels";
-import { CoachAppBarTheme, CoachColors, CoachRadii, CoachShadow } from "../theme/coachTheme";
+import { CoachColors, CoachRadii, CoachShadow } from "../theme/coachTheme";
+import { CoachTypography } from "../theme/coachTypography";
 
 type Nav = NativeStackNavigationProp<ReportsParamList>;
 
@@ -22,11 +27,11 @@ function sessionIdOf(s: CompletedSessionListItem): string {
 
 function PreviewStat({ label, value }: { label: string; value: string }) {
   return (
-    <View style={{ minWidth: "45%", marginBottom: 12 }}>
-      <Text style={{ fontSize: 10, fontWeight: "700", color: CoachColors.onSurfaceVariant, letterSpacing: 0.4 }}>
+    <View style={{ width: "48%", marginBottom: 12 }}>
+      <Text style={[CoachTypography.caption, { fontWeight: "700", letterSpacing: 0.4, color: CoachColors.onSurfaceVariant }]}>
         {label.toUpperCase()}
       </Text>
-      <Text style={{ fontSize: 14, fontWeight: "500", color: CoachColors.onSurface, marginTop: 2 }}>{value}</Text>
+      <Text style={[CoachTypography.labelSm, { color: CoachColors.onSurface, marginTop: 2 }]}>{value}</Text>
     </View>
   );
 }
@@ -56,16 +61,12 @@ export function ReportsHubScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: CoachColors.background }}>
-      <Appbar.Header elevated style={{ backgroundColor: CoachColors.componentSurface }} theme={CoachAppBarTheme}>
-        <Appbar.Content title="Raporlar" titleStyle={{ fontWeight: "700", color: CoachColors.onComponentSurface }} />
-      </Appbar.Header>
+      <CoachScreenBar title="Raporlar" />
       <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 120 }}>
-        <Text style={{ fontSize: 28, fontWeight: "700", color: CoachColors.onSurface, marginBottom: 8 }}>
-          Sınav sonuçları
-        </Text>
-        <Text style={{ fontSize: 16, lineHeight: 24, color: CoachColors.onSurfaceVariant, marginBottom: 24 }}>
-          Tamamladığınız klasik sınav ve teknik quiz oturumlarını inceleyin.
-        </Text>
+        <CoachPageTitle
+          title="Sınav sonuçları"
+          subtitle="Tamamladığınız klasik sınav ve teknik quiz oturumlarını inceleyin."
+        />
 
         {q.isLoading ? (
           <View style={{ paddingVertical: 32, alignItems: "center" }}>
@@ -78,24 +79,16 @@ export function ReportsHubScreen() {
         ) : null}
 
         {!q.isLoading && !items.length ? (
-          <View
-            style={{
-              padding: 24,
-              borderRadius: CoachRadii.xl,
-              borderWidth: 1,
-              borderColor: CoachColors.outlineVariant,
-              backgroundColor: CoachColors.surfaceContainerLowest,
-            }}
-          >
+          <CoachCard>
             <Text style={{ color: CoachColors.onSurfaceVariant }}>
               Henüz tamamlanmış sınav yok. Mülakatlar sekmesinden bir oturum başlatın.
             </Text>
-          </View>
+          </CoachCard>
         ) : null}
 
         {items.length > 0 ? (
           <>
-            <Text style={{ fontSize: 13, color: CoachColors.onSurfaceVariant, marginBottom: 12 }}>
+            <Text style={[CoachTypography.caption, { color: CoachColors.onSurfaceVariant, marginBottom: 12 }]}>
               {items.length} kayıt
             </Text>
             {items.map((s) => {
@@ -144,13 +137,16 @@ export function ReportsHubScreen() {
                       />
                     </View>
                     <View style={{ flex: 1, minWidth: 0 }}>
-                      <Text style={{ fontSize: 14, fontWeight: "600", color: CoachColors.onSurface }}>
+                      <Text style={[CoachTypography.labelSm, { fontWeight: "600", color: CoachColors.onSurface }]}>
                         {s.mode_label || s.mode}
                       </Text>
-                      <Text style={{ fontSize: 12, color: CoachColors.onSurfaceVariant, marginTop: 4 }} numberOfLines={2}>
+                      <Text
+                        style={[CoachTypography.caption, { color: CoachColors.onSurfaceVariant, marginTop: 4 }]}
+                        numberOfLines={2}
+                      >
                         {s.list_label || `${s.cv_name} → ${s.company_name}`}
                       </Text>
-                      <Text style={{ fontSize: 11, color: CoachColors.onSurfaceVariant, marginTop: 4 }}>
+                      <Text style={[CoachTypography.caption, { color: CoachColors.onSurfaceVariant, marginTop: 4 }]}>
                         {formatSessionDate(s.completed_at || s.started_at)}
                       </Text>
                     </View>
@@ -163,19 +159,9 @@ export function ReportsHubScreen() {
         ) : null}
 
         {selected ? (
-          <View
-            style={{
-              marginTop: 20,
-              padding: 20,
-              borderRadius: CoachRadii.xl,
-              borderWidth: 1,
-              borderColor: CoachColors.outlineVariant,
-              backgroundColor: CoachColors.surfaceContainerLow,
-              ...CoachShadow.card,
-            }}
-          >
+          <CoachCard style={{ marginTop: 12 }}>
             <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", gap: 12 }}>
-              <Text style={{ flex: 1, fontSize: 16, fontWeight: "600", color: CoachColors.onSurface }}>
+              <Text style={[CoachTypography.h3, { flex: 1, color: CoachColors.onSurface }]}>
                 {(selected.cv_name || "CV") +
                   " → " +
                   (selected.company_name || "Şirket") +
@@ -188,7 +174,6 @@ export function ReportsHubScreen() {
                 </Text>
               ) : null}
             </View>
-
             <View style={{ flexDirection: "row", flexWrap: "wrap", marginTop: 16 }}>
               <PreviewStat label="CV" value={selected.cv_name || "—"} />
               <PreviewStat label="Şirket" value={selected.company_name || "—"} />
@@ -202,29 +187,22 @@ export function ReportsHubScreen() {
                 }
               />
               <PreviewStat label="Sınav türü" value={selected.mode_label || selected.mode || "—"} />
-              <PreviewStat
-                label="Tarih"
-                value={formatSessionDate(selected.completed_at || selected.started_at)}
-              />
+              <PreviewStat label="Tarih" value={formatSessionDate(selected.completed_at || selected.started_at)} />
               <PreviewStat label="İstatistik" value={statsLine || "—"} />
             </View>
-
-            <Text style={{ fontSize: 14, lineHeight: 22, color: CoachColors.onSurfaceVariant, marginTop: 8 }}>
+            <Text style={[CoachTypography.bodyMd, { color: CoachColors.onSurfaceVariant, marginTop: 8 }]}>
               {selected.feedback_preview ||
                 selected.feedback ||
                 "Genel geri bildirim özeti bu oturumda kayıtlı değil. Detaylar için aşağıdaki butonu kullanın."}
             </Text>
-
-            <Button
-              mode="contained"
-              style={{ marginTop: 16, alignSelf: "flex-start", borderRadius: CoachRadii.md }}
+            <CoachPrimaryButton
+              label="Tüm detayları gör"
               onPress={() =>
                 navigation.navigate("ExamSessionDetail", { sessionId: sessionIdOf(selected) })
               }
-            >
-              Tüm detayları gör
-            </Button>
-          </View>
+              style={{ marginTop: 16, alignSelf: "flex-start" }}
+            />
+          </CoachCard>
         ) : null}
       </ScrollView>
     </View>

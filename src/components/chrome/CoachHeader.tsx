@@ -5,6 +5,7 @@ import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityI
 import { Menu, Text } from "react-native-paper";
 import { useAuthStore } from "../../store/useAuthStore";
 import { CoachColors, CoachRadii } from "../../theme/coachTheme";
+import { CoachTypography } from "../../theme/coachTypography";
 
 type Props = {
   searchValue?: string;
@@ -22,58 +23,30 @@ export function CoachHeader({ searchValue = "", onSearchChange }: Props) {
     <View
       style={{
         paddingTop: insets.top,
-        backgroundColor: CoachColors.componentSurface,
+        backgroundColor: CoachColors.surfaceContainerLowest,
         borderBottomWidth: StyleSheet.hairlineWidth,
-        borderBottomColor: CoachColors.outlineVariant,
+        borderBottomColor: CoachColors.headerBorder,
       }}
     >
-      <View
-        style={{
-          paddingHorizontal: 20,
-          paddingVertical: 12,
-          flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "space-between",
-          gap: 12,
-        }}
-      >
-        <View
-          style={{
-            width: 36,
-            height: 36,
-            borderRadius: 18,
-            backgroundColor: CoachColors.onComponentSurface,
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <Text style={{ fontWeight: "700", fontSize: 14, color: CoachColors.primary }}>{initial}</Text>
+      <View style={styles.row}>
+        <View style={styles.logoBox}>
+          <Text style={styles.logoLetter}>C</Text>
         </View>
-        <Text
-          style={{
-            flex: 1,
-            textAlign: "center",
-            fontSize: 22,
-            fontWeight: "700",
-            letterSpacing: -0.3,
-            color: CoachColors.onComponentSurface,
-          }}
-        >
-          CoachAI
-        </Text>
+        <View style={{ flex: 1 }}>
+          <Text style={[CoachTypography.labelSm, { fontWeight: "700", color: CoachColors.onSurface }]}>
+            CoachAI
+          </Text>
+          <Text style={[CoachTypography.caption, { color: CoachColors.onSurfaceVariant }]}>AI Mülakat Koçu</Text>
+        </View>
         <Menu
           visible={notifVisible}
           onDismiss={() => setNotifVisible(false)}
           anchor={
-            <Pressable
-              onPress={() => setNotifVisible(true)}
-              style={{ padding: 8, borderRadius: 20 }}
-              accessibilityLabel="Bildirimler"
-            >
-              <MaterialCommunityIcons name="bell-outline" size={22} color={CoachColors.onComponentSurface} />
+            <Pressable onPress={() => setNotifVisible(true)} style={styles.iconBtn} accessibilityLabel="Bildirimler">
+              <MaterialCommunityIcons name="bell-outline" size={22} color={CoachColors.onSurfaceVariant} />
             </Pressable>
           }
-          contentStyle={{ minWidth: 260, backgroundColor: CoachColors.surfaceCard }}
+          contentStyle={{ minWidth: 260, backgroundColor: CoachColors.surfaceContainerLowest }}
         >
           <View style={{ paddingHorizontal: 16, paddingTop: 12, paddingBottom: 8 }}>
             <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
@@ -90,40 +63,25 @@ export function CoachHeader({ searchValue = "", onSearchChange }: Props) {
               </View>
             </View>
             <View style={{ alignItems: "center", paddingVertical: 20, gap: 8 }}>
-              <MaterialCommunityIcons name="bell-off-outline" size={36} color={CoachColors.slate300} />
+              <MaterialCommunityIcons name="bell-off-outline" size={36} color={CoachColors.outlineVariant} />
               <Text style={{ fontSize: 12, color: CoachColors.onSurfaceVariant }}>Yeni bildirim yok</Text>
             </View>
           </View>
         </Menu>
+        <View style={styles.avatar}>
+          <Text style={{ fontWeight: "700", fontSize: 14, color: CoachColors.primary }}>{initial}</Text>
+        </View>
       </View>
       {onSearchChange ? (
         <View style={{ paddingHorizontal: 20, paddingBottom: 12 }}>
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              backgroundColor: CoachColors.surfaceCard,
-              borderWidth: 1,
-              borderColor: CoachColors.outlineVariant,
-              borderRadius: CoachRadii.full,
-              paddingLeft: 14,
-              paddingRight: 10,
-              height: 40,
-            }}
-          >
+          <View style={styles.searchWrap}>
             <MaterialCommunityIcons name="magnify" size={20} color={CoachColors.onSurfaceVariant} />
             <TextInput
               value={searchValue}
               onChangeText={onSearchChange}
               placeholder="Şirket veya pozisyon ara…"
-              placeholderTextColor={CoachColors.secondaryText}
-              style={{
-                flex: 1,
-                marginLeft: 8,
-                paddingVertical: 0,
-                fontSize: 15,
-                color: CoachColors.onSurface,
-              }}
+              placeholderTextColor={CoachColors.onSurfaceVariant}
+              style={styles.searchInput}
             />
           </View>
         </View>
@@ -131,3 +89,55 @@ export function CoachHeader({ searchValue = "", onSearchChange }: Props) {
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  row: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  logoBox: {
+    width: 32,
+    height: 32,
+    borderRadius: CoachRadii.md,
+    backgroundColor: CoachColors.primaryContainer,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  logoLetter: {
+    fontWeight: "700",
+    fontSize: 14,
+    color: CoachColors.onPrimary,
+  },
+  iconBtn: { padding: 8, borderRadius: 20 },
+  avatar: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: CoachColors.primaryFixed,
+    borderWidth: 2,
+    borderColor: CoachColors.primaryFixedDim,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  searchWrap: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: CoachColors.surfaceContainerLow,
+    borderWidth: 1,
+    borderColor: CoachColors.outlineVariant,
+    borderRadius: CoachRadii.full,
+    paddingLeft: 14,
+    paddingRight: 10,
+    height: 40,
+  },
+  searchInput: {
+    flex: 1,
+    marginLeft: 8,
+    paddingVertical: 0,
+    fontSize: 15,
+    color: CoachColors.onSurface,
+  },
+});

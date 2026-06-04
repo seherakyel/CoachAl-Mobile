@@ -32,7 +32,7 @@ import { coachConfirm, coachToast } from "../coach/CoachDialogs";
 import { CoachPalette } from "../../theme/coachTheme";
 
 const S = {
-  primary: CoachPalette.midnightIndigo,
+  primary: CoachPalette.primary,
   onPrimary: "#ffffff",
   surface: "#ffffff",
   outline: "#e1e3e4",

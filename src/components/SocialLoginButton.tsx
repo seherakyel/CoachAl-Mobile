@@ -46,7 +46,7 @@ export function SocialLoginRow({ onGoogle, onLinkedIn }: Props) {
           opacity: pressed ? 0.9 : 1,
         })}
       >
-        <MaterialCommunityIcons name="linkedin" size={22} color={CoachColors.softIndigo} />
+        <MaterialCommunityIcons name="linkedin" size={22} color={CoachColors.primaryContainer} />
         <Text style={{ fontSize: 15, fontWeight: "600", color: CoachColors.onSurface }}>LinkedIn</Text>
       </Pressable>
     </View>

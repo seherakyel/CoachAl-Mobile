@@ -3,13 +3,18 @@ import { View, ScrollView } from "react-native";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { RouteProp } from "@react-navigation/native";
-import { Appbar, Button, Snackbar, Text } from "react-native-paper";
+import { Snackbar, Text } from "react-native-paper";
 import { AlignmentPickerPanel } from "../components/alignment/AlignmentPickerPanel";
 import type { AlignmentListItem } from "../services/api";
 import { alignmentIdOf } from "../utils/sessionLabels";
 import { usePipelineStore } from "../store/usePipelineStore";
 import type { InterviewParamList } from "../app/navigationTypes";
-import { CoachAppBarTheme, CoachColors, CoachRadii } from "../theme/coachTheme";
+import { CoachScreenBar } from "../components/chrome/CoachScreenBar";
+import { CoachPageTitle } from "../components/ui/CoachPageTitle";
+import { CoachCard } from "../components/ui/CoachCard";
+import { CoachPrimaryButton } from "../components/ui/CoachPrimaryButton";
+import { CoachColors } from "../theme/coachTheme";
+import { CoachTypography } from "../theme/coachTypography";
 
 type Nav = NativeStackNavigationProp<InterviewParamList>;
 type R = RouteProp<InterviewParamList, "InterviewAlignmentSetup">;
@@ -21,11 +26,11 @@ export function InterviewAlignmentSetupScreen() {
   const [selected, setSelected] = useState<AlignmentListItem | null>(null);
   const [snack, setSnack] = useState<string | null>(null);
 
-  const title = mode === "quiz" ? "Teknik quiz kurulumu" : "Klasik sınav kurulumu";
+  const title = mode === "quiz" ? "Teknik Quiz" : "Klasik Sınav";
   const subtitle =
     mode === "quiz"
-      ? "Geçmiş bir hizalama analizi seçin; quiz bu CV ve şirket profiline göre üretilir."
-      : "Geçmiş bir hizalama analizi seçin; sorular bu eşleşmeye göre üretilir.";
+      ? "Hızlı çoktan seçmeli test — her soru için 60 saniye."
+      : "Daha önce yaptığınız bir eşleşme analizini seçerek klasik mülakat sınavını başlatın.";
 
   const start = () => {
     if (!selected) {
@@ -53,29 +58,26 @@ export function InterviewAlignmentSetupScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: CoachColors.background }}>
-      <Appbar.Header elevated style={{ backgroundColor: CoachColors.componentSurface }} theme={CoachAppBarTheme}>
-        <Appbar.BackAction onPress={() => navigation.goBack()} />
-        <Appbar.Content title={title} titleStyle={{ color: CoachColors.onComponentSurface }} />
-      </Appbar.Header>
+      <CoachScreenBar title={title} onBack={() => navigation.goBack()} />
       <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 48 }}>
-        <Text style={{ fontSize: 15, lineHeight: 22, color: CoachColors.onSurfaceVariant, marginBottom: 20 }}>
-          {subtitle}
-        </Text>
-        <AlignmentPickerPanel
-          selectedId={selected ? alignmentIdOf(selected) : null}
-          onSelect={setSelected}
-          limit={30}
-        />
-        <Button
-          mode="contained"
-          onPress={start}
-          disabled={!selected}
-          style={{ marginTop: 24, borderRadius: CoachRadii.md }}
-          buttonColor={CoachColors.primary}
-          textColor={CoachColors.onPrimary}
-        >
-          {mode === "quiz" ? "Quiz'e başla" : "Sınava başla"}
-        </Button>
+        <CoachPageTitle title={title} subtitle={subtitle} />
+        <CoachCard>
+          <Text style={[CoachTypography.labelSm, { color: CoachColors.onSurface, marginBottom: 8 }]}>
+            Geçmiş analiz
+          </Text>
+          <AlignmentPickerPanel
+            selectedId={selected ? alignmentIdOf(selected) : null}
+            onSelect={setSelected}
+            limit={30}
+          />
+          <CoachPrimaryButton
+            label={mode === "quiz" ? "Quizi Başlat" : "Sınavı Başlat"}
+            icon={mode === "quiz" ? "timer" : "play"}
+            onPress={start}
+            disabled={!selected}
+            style={{ marginTop: 20 }}
+          />
+        </CoachCard>
       </ScrollView>
       <Snackbar visible={!!snack} onDismiss={() => setSnack(null)} duration={4000}>
         {snack ?? ""}
