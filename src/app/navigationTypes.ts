@@ -6,14 +6,15 @@ export type AnalyzeParamList = {
 
 export type InterviewParamList = {
   InterviewHub: undefined;
-  ClassicInterview: undefined;
-  QuizInterview: undefined;
+  InterviewAlignmentSetup: { mode: "classic" | "quiz" };
+  ClassicInterview: { alignmentId: string };
+  QuizInterview: { alignmentId: string };
   InterviewOutcome: undefined;
 };
 
 export type ReportsParamList = {
   ReportsHub: undefined;
-  FeedbackReport: { alignmentId?: string; sessionId?: string | null } | undefined;
+  ExamSessionDetail: { sessionId: string };
 };
 
 export type MainTabParamList = {

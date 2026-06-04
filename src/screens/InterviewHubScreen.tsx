@@ -7,8 +7,8 @@ import type { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Text, Snackbar } from "react-native-paper";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
-import { listInterviews } from "../services/api";
-import { usePipelineStore } from "../store/usePipelineStore";
+import { listCompletedInterviews } from "../services/api";
+import { formatSessionDate, scoreTextColor, sessionModeIcon } from "../utils/sessionLabels";
 import type { InterviewParamList, MainTabParamList } from "../app/navigationTypes";
 import { CoachColors, CoachRadii, CoachShadow, CoachGlass } from "../theme/coachTheme";
 
@@ -19,27 +19,12 @@ type Nav = CompositeNavigationProp<
 
 export function InterviewHubScreen() {
   const navigation = useNavigation<Nav>();
-  const cvId = usePipelineStore((s) => s.cvId);
-  const profileId = usePipelineStore((s) => s.profileId);
-  const companyName = usePipelineStore((s) => s.companyName);
-  const cvDisplayName = usePipelineStore((s) => s.cvDisplayName);
-  const resetFlow = usePipelineStore((s) => s.resetFlow);
   const [snack, setSnack] = useState<string | null>(null);
 
   const history = useQuery({
-    queryKey: ["interview-list"],
-    queryFn: () => listInterviews(20),
+    queryKey: ["interview-completed", 10],
+    queryFn: () => listCompletedInterviews(10),
   });
-
-  const requireContext = () => {
-    if (!cvId || !profileId) {
-      setSnack("Önce panelden bir başvuru seçin veya analiz akışını tamamlayın.");
-      return false;
-    }
-    return true;
-  };
-
-  const showSessionBanner = !!(cvId && companyName);
 
   return (
     <View style={{ flex: 1, backgroundColor: CoachColors.background }}>
@@ -47,43 +32,9 @@ export function InterviewHubScreen() {
         <Text style={{ fontSize: 30, fontWeight: "700", letterSpacing: -0.5, color: CoachColors.primary, marginBottom: 8 }}>
           Mülakat hazırlığı
         </Text>
-        <Text style={{ fontSize: 17, lineHeight: 26, color: CoachColors.onSurfaceVariant, marginBottom: showSessionBanner ? 24 : 32 }}>
-          Gerçekçi senaryolarla becerilerinizi geliştirin.
+        <Text style={{ fontSize: 17, lineHeight: 26, color: CoachColors.onSurfaceVariant, marginBottom: 32 }}>
+          Geçmiş hizalama analizlerinizden birini seçerek sınav veya quiz başlatın.
         </Text>
-
-        {showSessionBanner ? (
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              gap: 12,
-              padding: 16,
-              backgroundColor: CoachColors.primaryFixed,
-              borderRadius: CoachRadii.xl,
-              borderWidth: 1,
-              borderColor: CoachColors.primaryFixedDim,
-              marginBottom: 32,
-            }}
-          >
-            <MaterialCommunityIcons name="information-outline" size={22} color={CoachColors.secondary} />
-            <View style={{ flex: 1 }}>
-              <Text style={{ fontSize: 14, fontWeight: "600", color: CoachColors.onSurface }}>
-                {(cvDisplayName || "CV") + " → " + companyName + " için hazır"}
-              </Text>
-              <Pressable
-                onPress={() => {
-                  resetFlow();
-                  navigation.navigate("CvAnalysis", { screen: "CvAnalysisHome" });
-                }}
-                style={{ marginTop: 6 }}
-              >
-                <Text style={{ fontSize: 12, color: CoachColors.secondary, textDecorationLine: "underline" }}>
-                  Farklı CV/şirket seç →
-                </Text>
-              </Pressable>
-            </View>
-          </View>
-        ) : null}
 
         <View style={{ gap: 24 }}>
           <View
@@ -150,10 +101,7 @@ export function InterviewHubScreen() {
               </View>
             </View>
             <Pressable
-              onPress={() => {
-                if (!requireContext()) return;
-                navigation.navigate("ClassicInterview");
-              }}
+              onPress={() => navigation.navigate("InterviewAlignmentSetup", { mode: "classic" })}
               style={{
                 backgroundColor: CoachColors.primary,
                 paddingVertical: 14,
@@ -228,10 +176,7 @@ export function InterviewHubScreen() {
               </View>
             </View>
             <Pressable
-              onPress={() => {
-                if (!requireContext()) return;
-                navigation.navigate("QuizInterview");
-              }}
+              onPress={() => navigation.navigate("InterviewAlignmentSetup", { mode: "quiz" })}
               style={{
                 backgroundColor: CoachColors.surfaceContainerLowest,
                 borderWidth: 1,
@@ -310,12 +255,10 @@ export function InterviewHubScreen() {
           <Text style={{ fontSize: 13, color: CoachColors.onSurfaceVariant }}>Kayıt yok</Text>
         ) : (
           (history.data?.items ?? []).map((it) => {
-            const sc = it.score;
-            const strong = sc != null && sc >= 80;
-            const mid = sc != null && sc >= 60 && sc < 80;
+            const sc = it.total_score ?? it.score;
             return (
               <View
-                key={it.session_id}
+                key={it.session_id || it.id}
                 style={{
                   flexDirection: "row",
                   alignItems: "center",
@@ -329,36 +272,27 @@ export function InterviewHubScreen() {
                   ...CoachShadow.card,
                 }}
               >
-                <View style={{ flex: 1, minWidth: 0, paddingRight: 12 }}>
-                  <Text style={{ fontWeight: "700", fontSize: 15, color: CoachColors.primary }}>{it.type}</Text>
-                  <Text style={{ fontSize: 12, color: CoachColors.outline, marginTop: 4 }} numberOfLines={1}>
-                    {it.session_id}
-                  </Text>
+                <View style={{ flexDirection: "row", flex: 1, minWidth: 0, paddingRight: 12, gap: 10 }}>
+                  <MaterialCommunityIcons
+                    name={sessionModeIcon(it.mode)}
+                    size={22}
+                    color={CoachColors.primary}
+                  />
+                  <View style={{ flex: 1, minWidth: 0 }}>
+                    <Text style={{ fontWeight: "700", fontSize: 15, color: CoachColors.primary }}>
+                      {it.mode_label || it.mode}
+                    </Text>
+                    <Text style={{ fontSize: 12, color: CoachColors.outline, marginTop: 4 }} numberOfLines={2}>
+                      {it.list_label || `${it.cv_name} → ${it.company_name}`}
+                    </Text>
+                    <Text style={{ fontSize: 11, color: CoachColors.onSurfaceVariant, marginTop: 2 }}>
+                      {formatSessionDate(it.completed_at || it.started_at)}
+                    </Text>
+                  </View>
                 </View>
-                <View
-                  style={{
-                    paddingHorizontal: 12,
-                    paddingVertical: 6,
-                    borderRadius: CoachRadii.full,
-                    backgroundColor: strong
-                      ? "rgba(34, 197, 94, 0.12)"
-                      : mid
-                        ? CoachColors.surfaceContainer
-                        : CoachColors.surfaceVariant,
-                    borderWidth: 1,
-                    borderColor: strong ? CoachColors.outline : CoachColors.outlineVariant,
-                  }}
-                >
-                  <Text
-                    style={{
-                      fontSize: 13,
-                      fontWeight: "700",
-                      color: strong ? CoachColors.primary : CoachColors.onSurfaceVariant,
-                    }}
-                  >
-                    {sc == null ? "—" : `${sc}%`}
-                  </Text>
-                </View>
+                <Text style={{ fontSize: 13, fontWeight: "700", color: scoreTextColor(sc ?? null) }}>
+                  {sc == null ? "—" : `%${Math.round(Number(sc))}`}
+                </Text>
               </View>
             );
           })

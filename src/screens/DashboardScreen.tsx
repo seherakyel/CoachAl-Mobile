@@ -260,10 +260,7 @@ export function DashboardScreen() {
                 const strong = score >= 80;
                 const openDetail = () => {
                   if (a.alignment_id) {
-                    navigation.navigate("Reports", {
-                      screen: "FeedbackReport",
-                      params: { alignmentId: a.alignment_id, sessionId: null },
-                    });
+                    navigation.navigate("Reports", { screen: "ReportsHub" });
                   } else {
                     navigation.navigate("CvAnalysis", { screen: "CvAnalysisHome" });
                   }
@@ -404,10 +401,7 @@ function JobCard({ job, navigation, onDismiss }: { job: AnalysisJob; navigation:
     });
     onDismiss();
     if (job.feedback) {
-      navigation.navigate("Reports", {
-        screen: "FeedbackReport",
-        params: { alignmentId: job.result.result_id, sessionId: null },
-      });
+      navigation.navigate("Reports", { screen: "ReportsHub" });
     } else {
       navigation.navigate("CvAnalysis", {
         screen: "AlignmentResult",

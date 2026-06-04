@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { View, Text, ScrollView, StyleSheet, Pressable, Animated, Platform } from "react-native";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { RouteProp } from "@react-navigation/native";
@@ -133,6 +133,7 @@ function SkelScreen({ onBack }: { onBack: () => void }) {
 }
 
 export function AlignmentResultScreen() {
+  const queryClient = useQueryClient();
   const navigation = useNavigation<Nav>();
   const route = useRoute<R>();
   const insets = useSafeAreaInsets();
@@ -187,7 +188,8 @@ export function AlignmentResultScreen() {
     const d = detailQuery.data;
     if (!resultId || !d || d.result_id !== resultId) return;
     usePipelineStore.getState().setAlignment(resultId, d);
-  }, [detailQuery.data, resultId]);
+    queryClient.invalidateQueries({ queryKey: ["alignment-list"] });
+  }, [detailQuery.data, resultId, queryClient]);
 
   const payload = useMemo(() => {
     if (!resultId) return alignment;
@@ -338,22 +340,12 @@ export function AlignmentResultScreen() {
         />
 
         <Pressable
-          onPress={() =>
-            navigation.getParent()?.navigate("Reports", {
-              screen: "FeedbackReport",
-              params: { alignmentId: effectiveAlignmentId, sessionId: null },
-            })
-          }
-          disabled={!effectiveAlignmentId}
+          onPress={() => navigation.getParent()?.navigate("Reports", { screen: "ReportsHub" })}
           android_ripple={{ color: "rgba(56, 95, 140, 0.12)" }}
-          style={({ pressed }) => [
-            styles.linkRow,
-            pressed && styles.pressed,
-            !effectiveAlignmentId && { opacity: 0.45 },
-          ]}
+          style={({ pressed }) => [styles.linkRow, pressed && styles.pressed]}
         >
           <MaterialCommunityIcons name="file-chart-outline" size={20} color={AR.indigo600} />
-          <Text style={styles.linkText}>AI raporu (Şirket eşleşme analizi)</Text>
+          <Text style={styles.linkText}>Sınav raporları</Text>
         </Pressable>
       </ScrollView>
 

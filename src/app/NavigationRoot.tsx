@@ -7,11 +7,12 @@ import { CvAnalysisScreen } from "../screens/CvAnalysisScreen";
 import { CvParsedResultScreen } from "../screens/CvParsedResultScreen";
 import { AlignmentResultScreen } from "../screens/AlignmentResultScreen";
 import { InterviewHubScreen } from "../screens/InterviewHubScreen";
+import { InterviewAlignmentSetupScreen } from "../screens/InterviewAlignmentSetupScreen";
 import { ClassicInterviewScreen } from "../screens/ClassicInterviewScreen";
 import { QuizInterviewScreen } from "../screens/QuizInterviewScreen";
 import { InterviewOutcomeScreen } from "../screens/InterviewOutcomeScreen";
 import { ReportsHubScreen } from "../screens/ReportsHubScreen";
-import { FeedbackReportScreen } from "../screens/FeedbackReportScreen";
+import { ExamSessionDetailScreen } from "../screens/ExamSessionDetailScreen";
 import { SettingsScreen } from "../screens/SettingsScreen";
 import type {
   AnalyzeParamList,
@@ -45,6 +46,11 @@ function InterviewNavigator() {
   return (
     <InterviewStack.Navigator>
       <InterviewStack.Screen name="InterviewHub" component={InterviewHubScreen} options={{ headerShown: false }} />
+      <InterviewStack.Screen
+        name="InterviewAlignmentSetup"
+        component={InterviewAlignmentSetupScreen}
+        options={{ title: "Kurulum" }}
+      />
       <InterviewStack.Screen name="ClassicInterview" component={ClassicInterviewScreen} options={{ title: "Klasik sınav" }} />
       <InterviewStack.Screen name="QuizInterview" component={QuizInterviewScreen} options={{ title: "Teknik quiz" }} />
       <InterviewStack.Screen name="InterviewOutcome" component={InterviewOutcomeScreen} options={{ title: "Sonuç" }} />
@@ -56,7 +62,7 @@ function ReportsNavigator() {
   return (
     <ReportsStack.Navigator>
       <ReportsStack.Screen name="ReportsHub" component={ReportsHubScreen} options={{ headerShown: false }} />
-      <ReportsStack.Screen name="FeedbackReport" component={FeedbackReportScreen} options={{ headerShown: false }} />
+      <ReportsStack.Screen name="ExamSessionDetail" component={ExamSessionDetailScreen} options={{ headerShown: false }} />
     </ReportsStack.Navigator>
   );
 }

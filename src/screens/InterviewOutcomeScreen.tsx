@@ -3,7 +3,6 @@ import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Appbar, Button, Card, Text } from "react-native-paper";
 import { useInterviewStore } from "../store/useInterviewStore";
-import { usePipelineStore } from "../store/usePipelineStore";
 import type { InterviewParamList } from "../app/navigationTypes";
 import { CoachAppBarTheme, CoachColors } from "../theme/coachTheme";
 
@@ -15,14 +14,14 @@ export function InterviewOutcomeScreen() {
   const classic = useInterviewStore((s) => s.classicResult);
   const quiz = useInterviewStore((s) => s.quizResult);
   const lastSessionId = useInterviewStore((s) => s.lastSessionId);
-  const alignmentId = usePipelineStore((s) => s.alignmentId);
 
-  const openFeedback = () => {
+  const openReport = () => {
+    if (!lastSessionId) return;
     const parent = navigation.getParent() as { navigate: (name: string, params?: Record<string, unknown>) => void } | undefined;
     if (!parent) return;
     parent.navigate("Reports", {
-      screen: "FeedbackReport",
-      params: { sessionId: lastSessionId, alignmentId: alignmentId ?? undefined },
+      screen: "ExamSessionDetail",
+      params: { sessionId: lastSessionId },
     });
   };
 
@@ -65,8 +64,8 @@ export function InterviewOutcomeScreen() {
         ) : null}
 
         <View style={{ height: 12 }} />
-        <Button mode="contained" disabled={!alignmentId || !lastSessionId} onPress={openFeedback}>
-          Mülakatla birlikte AI raporu
+        <Button mode="contained" disabled={!lastSessionId} onPress={openReport}>
+          Raporu gör
         </Button>
         <View style={{ height: 10 }} />
         <Button mode="outlined" onPress={() => navigation.navigate("InterviewHub")}>

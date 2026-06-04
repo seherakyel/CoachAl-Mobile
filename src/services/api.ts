@@ -123,13 +123,16 @@ export type AlignmentDetailResponse = AlignmentScoreResponse;
 
 export type AlignmentListItem = {
   id: string;
+  alignment_id?: string;
+  cv_id: string;
+  profile_id: string;
+  cv_name?: string;
   company_name: string;
+  position?: string;
   target_position: string;
   score: number;
   risk_level: string;
   created_at: string;
-  cv_id: string;
-  profile_id: string;
 };
 
 export type DashboardSummary = {
@@ -159,8 +162,9 @@ export type DashboardSummary = {
 };
 
 export type InterviewStartBody = {
-  cv_id: string;
-  profile_id: string;
+  cv_id?: string;
+  profile_id?: string;
+  alignment_id?: string;
   focus_topic?: string | null;
 };
 
@@ -249,6 +253,55 @@ export type InterviewListItem = {
   cv_id: string;
   profile_id: string;
   score?: number | null;
+};
+
+export type CompletedSessionListItem = {
+  id: string;
+  session_id: string;
+  alignment_id?: string;
+  mode: string;
+  mode_label?: string;
+  type?: string;
+  status?: string;
+  cv_id?: string;
+  profile_id?: string;
+  cv_name?: string;
+  company_name?: string;
+  position?: string;
+  focus_topic?: string;
+  alignment_score?: number | null;
+  risk_level?: string;
+  question_count?: number;
+  correct_count?: number | null;
+  weak_answer_count?: number;
+  total_score?: number | null;
+  score?: number | null;
+  feedback?: string;
+  feedback_preview?: string;
+  completed_at?: string;
+  started_at?: string;
+  created_at?: string;
+  list_label?: string;
+};
+
+export type InterviewSessionQuestionRow = {
+  question_index?: number;
+  question?: string;
+  difficulty?: string;
+  type?: string;
+  answer?: string;
+  score?: number | null;
+  feedback?: string;
+  options?: string[];
+  selected_index?: number | null;
+  correct_index?: number | null;
+  is_correct?: boolean;
+  explanation?: string;
+};
+
+export type InterviewSessionDetail = CompletedSessionListItem & {
+  per_question?: InterviewSessionQuestionRow[];
+  feedback_full?: string;
 };
 
 export async function getHealth(): Promise<HealthResponse> {
@@ -630,5 +683,22 @@ export async function listInterviews(limit = 20): Promise<{ items: InterviewList
   const res = await api.get<{ items: InterviewListItem[]; total: number }>("/interview/list", {
     params: { limit },
   });
+  return res.data;
+}
+
+export async function listCompletedInterviews(
+  limit = 30,
+): Promise<{ items: CompletedSessionListItem[]; total: number }> {
+  const res = await api.get<{ items: CompletedSessionListItem[]; total: number }>(
+    "/interview/completed",
+    { params: { limit } },
+  );
+  return res.data;
+}
+
+export async function getInterviewSession(sessionId: string): Promise<InterviewSessionDetail> {
+  const res = await api.get<InterviewSessionDetail>(
+    `/interview/session/${encodeURIComponent(sessionId)}`,
+  );
   return res.data;
 }

@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { View, ScrollView } from "react-native";
 import { useMutation } from "@tanstack/react-query";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useRoute } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import type { RouteProp } from "@react-navigation/native";
 import { Appbar, Button, Card, Snackbar, Text } from "react-native-paper";
 import { startQuizInterview, submitQuizInterview } from "../services/api";
 import type { QuizQuestion } from "../services/api";
@@ -14,9 +15,12 @@ import type { InterviewParamList } from "../app/navigationTypes";
 import { CoachAppBarTheme, CoachColors } from "../theme/coachTheme";
 
 type Nav = NativeStackNavigationProp<InterviewParamList>;
+type R = RouteProp<InterviewParamList, "QuizInterview">;
 
 export function QuizInterviewScreen() {
   const navigation = useNavigation<Nav>();
+  const route = useRoute<R>();
+  const alignmentId = route.params.alignmentId;
   const cvId = usePipelineStore((s) => s.cvId);
   const profileId = usePipelineStore((s) => s.profileId);
   const [snack, setSnack] = useState<string | null>(null);
@@ -53,11 +57,15 @@ export function QuizInterviewScreen() {
   });
 
   useEffect(() => {
-    if (!cvId || !profileId) return;
+    if (!alignmentId && (!cvId || !profileId)) return;
     if (bootRef.current) return;
     bootRef.current = true;
-    start.mutate({ cv_id: cvId, profile_id: profileId });
-  }, [cvId, profileId]);
+    if (alignmentId) {
+      start.mutate({ alignment_id: alignmentId });
+    } else {
+      start.mutate({ cv_id: cvId!, profile_id: profileId! });
+    }
+  }, [alignmentId, cvId, profileId]);
 
   const current = useMemo(() => questions[idx] ?? null, [questions, idx]);
   const total = questions.length;
